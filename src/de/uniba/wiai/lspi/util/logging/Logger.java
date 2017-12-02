@@ -113,13 +113,13 @@ public abstract class Logger implements java.io.Serializable {
 	public synchronized static Logger getLogger(String name) {
 
 		String loggingOff = System.getProperty(LOGGING_OFF_PROPERTY_NAME);
+		
 		boolean logOff = false; 
 
 		if ((loggingOff != null) && (loggingOff.equalsIgnoreCase("true"))) {
 			name = Logger.class.getName();
 			logOff = true; 
 		}
-
 		Logger logger = Logger.loggerInstances.get(name);
 		if (logger != null) {
 			return logger;
@@ -142,8 +142,9 @@ public abstract class Logger implements java.io.Serializable {
 					 * Exception occured during instantiation of custom logger or
 					 * Log4jLogger. Create dummy logger.
 					 */
-					System.setProperty(LOGGING_OFF_PROPERTY_NAME, "true"); 
-					logger = getLogger(name); 
+					//System.setProperty(LOGGING_OFF_PROPERTY_NAME, "true"); 
+					//logger = getLogger(name);
+					logger = new SystemOutPrintlnLogger(name);
 				}
 			} else {
 				logger = new DummyLogger(name); 

@@ -31,6 +31,8 @@ import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.INFO;
 
 import java.io.Console;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -428,25 +430,66 @@ public final class NodeImpl extends Node {
 		return this.asyncExecutor;
 	}
 	
+	private void sendBroadcast(List<Node> sortedFingerTable, int counter, Broadcast info) throws CommunicationException{		
+		
+		Node nextNode = sortedFingerTable.get(counter);
+		
+		// not change the if statements!
+		// stop criterion for 2. case
+		if(nextNode.getNodeID().equals(info.getRange())){
+			// no node between us and the range
+			return;
+		}
+		// stop criterion for 1. case
+		if(counter == sortedFingerTable.size() - 1){
+			nextNode.broadcast(info);
+			return;
+		}
+		counter += 1;
+		ID nextNextNodeID = sortedFingerTable.get(counter).getNodeID();
+		this.sendBroadcastToNode(nextNextNodeID, nextNode, counter, info);
+		this.sendBroadcast(sortedFingerTable, counter, info);
+	}
+	
+	private void sendBroadcastToNode(ID nextNextNodeID, Node nextNode,
+			int counter, Broadcast info) throws CommunicationException{
+		Broadcast newInfo = new Broadcast(nextNextNodeID, info.getSource(),
+				info.getTarget(), info.getTransaction(), info.getHit());
+		nextNode.broadcast(newInfo);
+		
+		//this.sendBroadcast(fingerTable, last, counter + 1, lastPos, info);
+	}
+	
 	// TODO: implement this function in TTP
 	@Override
 	public final void broadcast(Broadcast info) throws CommunicationException {
-		
-		//Hier nur prüfen
+		/* 2 cases to differentiate:
+		 * 1. this method was called from ChordImpl.broadcast.
+		 * 		in this case we got a retrieved from another node.
+		 * 		the range and source are the same and we need to broadcast
+		 *    to all nodes in fingerTable.
+		 * 2. this method was called from another node to inform us. 
+		 * 		in this case we need to call notifyCallback.broadcast()
+		 * 		and we need to send a broadcast to all nodes in fingerTable 
+		 * 		which are placed between our node an the given range.
+		*/
 		if (this.logger.isEnabledFor(DEBUG)) {
 			this.logger.debug(" Send broadcast message");
 		}
-		// broadcast ü ernimmt das senden automatisch, hier rufen wir nur die finger nodes auf und rufen auf diesen wieder broadcast auf
-		if(info.getTarget() == this.nodeID ){
-			// SENDE KEINE WEITEREN BREADCAST
-		}else{
-			// mach nen breadcast per RMI an andere nodes
-			for(int i = 0; i < impl.getFingerTable().size() ;i++){
-				
-			}
+
+		List<Node> sortedFingerTable = this.impl.getFingerTable();
+		// sort fingerTable by nodeID
+		sortedFingerTable.sort(Comparator.comparing(Node::getNodeID));
+
+		// 2. case: broadcast comes from another node
+		if(!info.getRange().equals(info.getSource())){
+			// inform application
+			if (this.notifyCallback != null) {
+				this.notifyCallback.broadcast(info.getSource(), info.getTarget(), info.getHit());
+				}
 		}
+		this.sendBroadcast(sortedFingerTable, 0, info);
 		
-		// FingerTable impl comparable --> sollten wir sortieren
 		// Terminierung erfolgt durch  Range +1
 		// also muss ich alle finger in einer reihenfolge durchgehen und dem nächsten node
 		// dem ich ein broadcast mitteile, gebe ich als range immer nur den finger an, der nach meiner sortierten
@@ -454,10 +497,7 @@ public final class NodeImpl extends Node {
 		
 		//Hinweis --> randfälle betrachten
 		
-		// finally inform application
-		if (this.notifyCallback != null) {
-			this.notifyCallback.broadcast(info.getSource(), info.getTarget(), info.getHit());
-		}
+
 	}
 
 }

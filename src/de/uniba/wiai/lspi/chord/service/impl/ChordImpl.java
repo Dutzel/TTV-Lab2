@@ -42,6 +42,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import app.NotifyCallbackImpl;
 import de.uniba.wiai.lspi.chord.com.Broadcast;
 import de.uniba.wiai.lspi.chord.com.CommunicationException;
 import de.uniba.wiai.lspi.chord.com.Entry;
@@ -154,6 +155,9 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	 * Executor service for asynch requests.
 	 */
 	private ExecutorService asyncExecutor;
+	
+
+	public static int myTransactionID = 0;
 
 	/**
 	 * ThreadFactory used with Executor services.
@@ -210,6 +214,9 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		this.logger = Logger.getLogger(ChordImpl.class.getName()
 				+ ".unidentified");
 		this.logger.debug("Logger initialized.");
+		
+		//TODO: announce the interface
+		this.setCallback(new NotifyCallbackImpl(this));
 
 		this.maintenanceTasks = new ScheduledThreadPoolExecutor(3,
 				new ChordThreadFactory("MaintenanceTaskExecution"));
@@ -393,7 +400,10 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 					"NUMBER_OF_SUCCESSORS intialized with wrong value! "
 							+ NUMBER_OF_SUCCESSORS);
 		}
-
+		this.logger.error("*****************************************");
+		this.logger.warn("******");
+		System.out.println("*******************");
+		
 		// create NodeImpl instance for communication
 		this.localNode = new NodeImpl(this, this.getID(), this.localURL, this.localCallback,
 				this.references, this.entries);
@@ -1112,26 +1122,22 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		return ChordRemoveFuture.create(this.asyncExecutor, this, key, entry);
 	}
 	
-	public static int myTransactionID = 0;
 	// TODO: implement this function in TTP 
-	//send broadcast to all nodes in finger table# DAS HIER WIRD VON UNSERER ANWENDUNG ANFGERUFEN; DIE ZUVPR GEPRÜFT HAT, OB WIR GETROFFEN WURDEN!
+	//send broadcast to all nodes in finger table
+	//# DAS HIER WIRD VON UNSERER ANWENDUNG ANFGERUFEN; DIE ZUVPR GEPRÜFT HAT, OB WIR GETROFFEN WURDEN!
 	// Die ANwendung die wir schrieben muss NotifyCallback implementieren!
 	@Override
 	public void broadcast (ID target, Boolean hit) {
-
-		Broadcast test = new Broadcast(this.getID(), this.getID(), target, myTransactionID, hit);
+		Broadcast broadcast = new Broadcast(this.getID(), this.getID(), 
+				target, myTransactionID, hit);
 		try {
-			localNode.broadcast(test);
+			this.localNode.broadcast(broadcast);
 		} catch (CommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		myTransactionID++;
-		// sende broadcast weiter?
-		
-		// In unserer Anwendung müssen wir ein retriever erhalten und je nachdem ein broadcast über das interface
-		// notify callback senden
-		
+		//TODO: woher wissen wir, dass wir der startknoten sind?
+		ChordImpl.myTransactionID++;
 	}
 	
 	public void setCallback (NotifyCallback callback) {
