@@ -64,7 +64,7 @@ import de.uniba.wiai.lspi.util.logging.Logger;
 
 /**
  * Implements all operations which can be invoked on the local node.
- * 
+ *
  * @author Karsten Loesing
  * @version 1.0.5
  */
@@ -142,6 +142,14 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	private NodeImpl localNode;
 
 	/**
+	 * Implementation of our battle strategie which includes the distribution of
+	 * our ships as well as the shooting tactic.
+	 * TODO: Consider whether we need some methods within ChordImpl or not.
+	 * But lets keep it this way for now.
+	 */
+	private BattlePlan battlePlan;
+
+	/**
 	 * Entries stored at this node, including replicas.
 	 */
 	private Entries entries;
@@ -155,15 +163,15 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	 * Executor service for asynch requests.
 	 */
 	private ExecutorService asyncExecutor;
-	
+
 
 	public static int myTransactionID = 0;
 
 	/**
 	 * ThreadFactory used with Executor services.
-	 * 
+	 *
 	 * @author sven
-	 * 
+	 *
 	 */
 	private static class ChordThreadFactory implements
 			java.util.concurrent.ThreadFactory {
@@ -201,7 +209,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	 * This node's ID.
 	 */
 	private ID localID;
-	
+
 	private NotifyCallback localCallback;
 
 	/* constructor */
@@ -214,7 +222,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		this.logger = Logger.getLogger(ChordImpl.class.getName()
 				+ ".unidentified");
 		this.logger.debug("Logger initialized.");
-		
+
 		//TODO: announce the interface
 		this.setCallback(new NotifyCallbackImpl(this));
 
@@ -267,7 +275,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	public final ID getID() {
 		return this.localID;
 	}
-	
+
 	// added by INET
 	@Override
 	public final ID getPredecessorID () {
@@ -381,7 +389,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	 * localID and localURL are correctly set. Is invoked by the methods
 	 * {@link #create()}, {@link #create(URL)}, and {@link #create(URL, ID)}
 	 * only.
-	 * 
+	 *
 	 * @throws RuntimeException
 	 */
 	private final void createHelp() {
@@ -393,7 +401,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 
 		// create local repository for node references
 		if (NUMBER_OF_SUCCESSORS >= 1) {
-			this.references = new References(this.getID(), this.getURL(), 
+			this.references = new References(this.getID(), this.getURL(),
 					NUMBER_OF_SUCCESSORS, this.entries);
 		} else {
 			throw new RuntimeException(
@@ -403,10 +411,13 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		this.logger.error("*****************************************");
 		this.logger.warn("******");
 		System.out.println("*******************");
-		
+
 		// create NodeImpl instance for communication
 		this.localNode = new NodeImpl(this, this.getID(), this.localURL, this.localCallback,
 				this.references, this.entries);
+
+		//create BattlePlan instance for communication
+		this.battlePlan = new BattlePlan(this);
 
 		// create tasks for fixing finger table, checking predecessor and
 		// stabilizing
@@ -533,7 +544,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	 * that localID and localURL are correctly set. Is invoked by the methods
 	 * {@link #join(URL)}, {@link #join(URL, URL)}, and
 	 * {@link #join(URL, ID, URL)} only.
-	 * 
+	 *
 	 * @param bootstrapURL
 	 *            URL of bootstrap node. Must not be null!.
 	 * @throws ServiceException
@@ -550,7 +561,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 
 		// create local repository for node references
 		if (NUMBER_OF_SUCCESSORS >= 1) {
-			this.references = new References(this.getID(), this.getURL(), 
+			this.references = new References(this.getID(), this.getURL(),
 					NUMBER_OF_SUCCESSORS, this.entries);
 		} else {
 			throw new RuntimeException(
@@ -870,7 +881,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		return values;
 
 	}
-	
+
 	public final void remove(Key key, Serializable s) {
 
 		// check parameters
@@ -921,7 +932,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	/**
 	 * Returns a human-readable string representation containing this node's
 	 * node ID and URL.
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
@@ -935,7 +946,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 
 	/**
 	 * Returns the Chord node which is responsible for the given key.
-	 * 
+	 *
 	 * @param key
 	 *            Key for which the successor is searched for.
 	 * @throws NullPointerException
@@ -1034,7 +1045,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	public final String printFingerTable() {
 		return this.references.printFingerTable();
 	}
-	
+
 	public final List<Node> getFingerTable() {
 		return this.references.getFingerTableEntries();
 	}
@@ -1121,14 +1132,14 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	public ChordFuture removeAsync(Key key, Serializable entry) {
 		return ChordRemoveFuture.create(this.asyncExecutor, this, key, entry);
 	}
-	
-	// TODO: implement this function in TTP 
+
+	// TODO: implement this function in TTP
 	//send broadcast to all nodes in finger table
 	//# DAS HIER WIRD VON UNSERER ANWENDUNG ANFGERUFEN; DIE ZUVPR GEPRÜFT HAT, OB WIR GETROFFEN WURDEN!
 	// Die ANwendung die wir schrieben muss NotifyCallback implementieren!
 	@Override
 	public void broadcast (ID target, Boolean hit) {
-		Broadcast broadcast = new Broadcast(this.getID(), this.getID(), 
+		Broadcast broadcast = new Broadcast(this.getID(), this.getID(),
 				target, myTransactionID, hit);
 		try {
 			this.localNode.broadcast(broadcast);
@@ -1139,7 +1150,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		//TODO: woher wissen wir, dass wir der startknoten sind?
 		ChordImpl.myTransactionID++;
 	}
-	
+
 	public void setCallback (NotifyCallback callback) {
 		if (callback == null) {
 			NullPointerException e = new NullPointerException(
