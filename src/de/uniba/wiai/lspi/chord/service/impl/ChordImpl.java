@@ -42,7 +42,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import app.NotifyCallbackImpl;
 import de.uniba.wiai.lspi.chord.com.Broadcast;
 import de.uniba.wiai.lspi.chord.com.CommunicationException;
 import de.uniba.wiai.lspi.chord.com.Entry;
@@ -146,8 +145,9 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	 * our ships as well as the shooting tactic.
 	 * TODO: Consider whether we need some methods within ChordImpl or not.
 	 * But lets keep it this way for now.
+	 * TODO fabian: we do not need an instance here, because we have "localCallback" at line 214
 	 */
-	private BattlePlan battlePlan;
+	//private BattlePlan battlePlan;
 
 	/**
 	 * Entries stored at this node, including replicas.
@@ -222,9 +222,6 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		this.logger = Logger.getLogger(ChordImpl.class.getName()
 				+ ".unidentified");
 		this.logger.debug("Logger initialized.");
-
-		//TODO: announce the interface
-		this.setCallback(new NotifyCallbackImpl(this));
 
 		this.maintenanceTasks = new ScheduledThreadPoolExecutor(3,
 				new ChordThreadFactory("MaintenanceTaskExecution"));
@@ -417,7 +414,9 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 				this.references, this.entries);
 
 		//create BattlePlan instance for communication
-		this.battlePlan = new BattlePlan(this);
+		//this.battlePlan = new BattlePlan(this);
+		//TODO: announce the interface
+		this.setCallback(new BattlePlan(this, "localhost:5683", null));
 
 		// create tasks for fixing finger table, checking predecessor and
 		// stabilizing
