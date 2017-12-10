@@ -2,6 +2,7 @@ package de.uniba.wiai.lspi.chord.service.impl;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import app.CoAPConnectionLED;
@@ -55,6 +56,9 @@ public class BattlePlan implements NotifyCallback{
 		this.cCon.turnOn();
 		this.cCon.setColor("g");
 		this.strategy = strategy;
+		List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
+				this.impl.getPredecessorID(), this.impl.getID());
+		this.strategy.setownShipIntervals(ownShipIntervals);
 		this.shipPositions = this.strategy.shipPlacementStrategy();
 	}
 

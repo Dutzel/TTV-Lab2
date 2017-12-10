@@ -1147,7 +1147,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		ChordImpl.myTransactionID++;
 	}
 

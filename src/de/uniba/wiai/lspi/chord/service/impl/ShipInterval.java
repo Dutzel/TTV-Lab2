@@ -58,6 +58,11 @@ public class ShipInterval {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "ShipInterval [from=" + from + ", to=" + to + "]";
+	}
 	
 
 }
