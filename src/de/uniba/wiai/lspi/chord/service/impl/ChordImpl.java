@@ -31,6 +31,7 @@ import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.INFO;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.HashSet;
 import java.util.List;
@@ -1146,7 +1147,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//TODO: woher wissen wir, dass wir der startknoten sind?
+		
 		ChordImpl.myTransactionID++;
 	}
 

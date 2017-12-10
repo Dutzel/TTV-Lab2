@@ -1,15 +1,11 @@
 package de.uniba.wiai.lspi.chord.service.impl;
+
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import app.CoAPConnectionLED;
-import app.IStrategy;
-import de.uniba.wiai.lspi.chord.com.Broadcast;
-import de.uniba.wiai.lspi.chord.com.Node;
+import app.Strategy;
 import de.uniba.wiai.lspi.chord.data.ID;
 import de.uniba.wiai.lspi.chord.service.NotifyCallback;
 
@@ -29,25 +25,25 @@ public class BattlePlan implements NotifyCallback{
 	//private List<BigInteger> shipPositions;
 	private Map<ShipInterval, Boolean> shipPositions;
 	//private List<ID> hittedEnemyShips;
-	private Map<ID, Integer> enemiesWithShipCount;
+	//private Map<ID, Integer> enemiesWithShipCount;
 	private CoAPConnectionLED cCon;
 	
 	/**
 	 * Our strategy of ship placements and choosing a target.
 	 */
-	private IStrategy strategy;
+	private Strategy strategy;
 	
 	/**
 	 * We need to know if we shot the last received broadcast package.
 	 */
 	private ID lastShotTarget = null;
 
-	public BattlePlan(ChordImpl impl, String coapUri, IStrategy strategy) {
+	public BattlePlan(ChordImpl impl, String coapUri, Strategy strategy) {
 		this.impl = impl;
 		//shipPositions = new ArrayList<BigInteger>();
 		this.shipPositions = new HashMap<ShipInterval, Boolean>();
 		//hittedEnemyShips = new ArrayList<ID>();
-		enemiesWithShipCount = new HashMap<ID, Integer>();
+		//enemiesWithShipCount = new HashMap<ID, Integer>();
 		firstShotReceived = false;
 		//initEnemiesWithShipCount();
 		//setupShipPositioning(null);
@@ -92,9 +88,7 @@ public class BattlePlan implements NotifyCallback{
 		}
 		this.impl.broadcast(target, hit);
 		ID ourTarget = this.chooseTarget();
-		this.impl.retrieve(ourTarget);
-		this.lastShotTarget = ourTarget;
-
+		this.shoot(ourTarget);
 	}
 
 	@Override
@@ -111,21 +105,29 @@ public class BattlePlan implements NotifyCallback{
 		//		set this.lastShotTarget = null; because if we were shot, then we will shoot, so we know if the last broadcast was ours
 		if(hit){
 			//hittedEnemyShips.add(target);
-			this.strategy.addTarget(target);
+			this.strategy.addHitTarget(source, target);
 			// Once an enemy got hit, we need to update his information
 			// Later we can use this information to choose our next target
 			// e.g. if we intend to hit the enemy that already sustained the most hits.
-			Integer count = enemiesWithShipCount.get(source);
+			//Integer count = enemiesWithShipCount.get(source);
+			Integer count = this.strategy.getEnemyShipCount(source);
 			if(count == null){
 				count = 0;
 			}
-			enemiesWithShipCount.put(source, count + 1);
+			count += 1;
+			//enemiesWithShipCount.put(source, count);
+			this.strategy.putEnemyShipCount(source, count);
 			// we shot this enemy
 			if(this.lastShotTarget.equals(target)){
-					if(this.enemiesWithShipCount.get(source) == 100){
-						//we win the game, but what to do know?
+					//if(this.enemiesWithShipCount.get(source) == 10){
+					if(count == 10){
+						//we win the game, but what to do now?
 					}
 			}
+		}
+		else{
+			//also remember no hits
+			this.strategy.addNoHitTarget(source, target);
 		}
 		this.lastShotTarget = null;
 		
@@ -144,7 +146,7 @@ public class BattlePlan implements NotifyCallback{
 //			 * In order to do so, we should read the target id and place our ships around the first impact
 //			 * in our intervall.
 //			 */
-//			// TODO: Strategie to give 100 ships a position.
+//			// TODO: Strategie to give 10 ships a position.
 //			refreshSortedFingerTable();
 //			impl.getID().toBigInteger();
 //			firstShotReceived = true;
@@ -165,7 +167,7 @@ public class BattlePlan implements NotifyCallback{
 //			 * e.g.: hittedEnemyShips.get(0).isInInterval(fromID, toID)
 //			 */
 ////			for (ID id : hittedEnemyShips) {
-////				if(enemiesWithShipCount.get(id) == 100 ){
+////				if(enemiesWithShipCount.get(id) == 10 ){
 ////					//this enemy has lost all his ships
 ////				}
 ////			}
@@ -264,7 +266,7 @@ public class BattlePlan implements NotifyCallback{
 		for(boolean shipSet : this.shipPositions.values()){
 			count += (shipSet ? 1 : 0);
 		}
-		float per = ((count * 100) / IStrategy.shipCount);
+		float per = ((count * 100) / this.strategy.getShipCount());
 		if(per > 0.0f && per < 50.0f){
 			color = "b";
 		}
