@@ -43,6 +43,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import app.StrategyOne;
 import de.uniba.wiai.lspi.chord.com.Broadcast;
 import de.uniba.wiai.lspi.chord.com.CommunicationException;
 import de.uniba.wiai.lspi.chord.com.Entry;
@@ -410,14 +411,16 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		this.logger.warn("******");
 		System.out.println("*******************");
 
+		//create BattlePlan instance for communication
+		//this.battlePlan = new BattlePlan(this);
+		//TODO: announce the interface
+		this.setCallback(new BattlePlan(this, "localhost:5683", new StrategyOne()));
+		
 		// create NodeImpl instance for communication
 		this.localNode = new NodeImpl(this, this.getID(), this.localURL, this.localCallback,
 				this.references, this.entries);
 
-		//create BattlePlan instance for communication
-		//this.battlePlan = new BattlePlan(this);
-		//TODO: announce the interface
-		this.setCallback(new BattlePlan(this, "localhost:5683", null));
+		
 
 		// create tasks for fixing finger table, checking predecessor and
 		// stabilizing
@@ -454,6 +457,10 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 				ChordImpl.CHECK_PREDECESSOR_TASK_INTERVAL, TimeUnit.SECONDS);
 	}
 
+	/**
+	 * TODO:
+	 * Dustin: sollen wir in der eigenen Main ansprechen
+	 */
 	public final void join(URL bootstrapURL) throws ServiceException {
 
 		// check if parameters are valid

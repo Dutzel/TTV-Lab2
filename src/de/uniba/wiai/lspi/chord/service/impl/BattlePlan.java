@@ -52,14 +52,15 @@ public class BattlePlan implements NotifyCallback{
 		startStrategie(null);
 		
 		// init coap interface and set led status to green
-		this.cCon = new CoAPConnectionLED(coapUri);
-		this.cCon.turnOn();
-		this.cCon.setColor("g");
+		
+		//this.cCon = new CoAPConnectionLED(coapUri);
+//		this.cCon.turnOn();
+//		this.cCon.setColor("g");
 		this.strategy = strategy;
-		List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
-				this.impl.getPredecessorID(), this.impl.getID());
-		this.strategy.setownShipIntervals(ownShipIntervals);
-		this.shipPositions = this.strategy.shipPlacementStrategy();
+		//List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
+		//		this.impl.getPredecessorID(), this.impl.getID());
+		//this.strategy.setownShipIntervals(ownShipIntervals);
+		//this.shipPositions = this.strategy.shipPlacementStrategy();
 	}
 
 	@Override
@@ -122,7 +123,15 @@ public class BattlePlan implements NotifyCallback{
 			//enemiesWithShipCount.put(source, count);
 			this.strategy.putEnemyShipCount(source, count);
 			// we shot this enemy
-			if(this.lastShotTarget.equals(target)){
+			/**
+			 * // Dustin: Zur Prüfung ob der Broadcast von uns selbst kommt.. 
+			 * Ich bin mir nicht sicher ob das so funktioniert, 
+			 * was ist wenn andere erst Schießen, 
+			 * nachdem sie getroffen wurden, und dann Broadcasten, 
+			 * dass ein Schuss auf sie erfolgreich stattfand?
+			 * --> Das Senden eines Broadcasts muss parallel (asynchron) zum übrigen Programmablauf erfolgen!
+			 */
+			if(this.lastShotTarget.equals(target)){  
 					//if(this.enemiesWithShipCount.get(source) == 10){
 					if(count == 10){
 						//we win the game, but what to do now?

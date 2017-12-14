@@ -30,10 +30,19 @@ public abstract class Strategy {
 	
 	public abstract ID chooseTargetStrategy();
 	
-	public void addHitTarget(ID source, ID target){
-		ArrayList<ID> enemy = this.hitEnemyShips.get(source);
+	/**
+	 * // Frage: Wollen wir Target nicht die Pos hinzufügen an der es getroffen wurde?
+	 * Wenn Source = Beschossener User & Target = beschossene Position im Interval des Users,
+	 * dann sollten wir source und target umbenennen, da es sonst irreführend ist, bsp.:
+	 * source => attackedEnemy,
+	 * target => target
+	 * @param attackedEnemy
+	 * @param target
+	 */
+	public void addHitTarget(ID attackedEnemy, ID target){
+		ArrayList<ID> enemy = this.hitEnemyShips.get(attackedEnemy); 
 		if(enemy == null){
-			this.hitEnemyShips.put(source, 
+			this.hitEnemyShips.put(attackedEnemy, 
 					(ArrayList<ID>) Stream.of(target).collect(Collectors.toList()));
 		}
 		else{
@@ -41,10 +50,10 @@ public abstract class Strategy {
 		}
 	}
 	
-	public void addNoHitTarget(ID source, ID target){
-		ArrayList<ID> enemy = this.noHitEnemyShips.get(source);
+	public void addNoHitTarget(ID attackedEnemy, ID target){
+		ArrayList<ID> enemy = this.noHitEnemyShips.get(attackedEnemy);
 		if(enemy == null){
-			this.noHitEnemyShips.put(source, 
+			this.noHitEnemyShips.put(attackedEnemy, 
 					(ArrayList<ID>) Stream.of(target).collect(Collectors.toList()));
 		}
 		else{
