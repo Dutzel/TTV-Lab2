@@ -442,7 +442,8 @@ public final class NodeImpl extends Node {
 		}
 		// stop criterion for 1. case
 		if(counter == sortedFingerTable.size() - 1){
-			nextNode.broadcast(info);
+			this.execBroadcast(nextNode, info);
+			//nextNode.broadcast(info);
 			return;
 		}
 		counter += 1;
@@ -455,9 +456,26 @@ public final class NodeImpl extends Node {
 			int counter, Broadcast info) throws CommunicationException{
 		Broadcast newInfo = new Broadcast(nextNextNodeID, info.getSource(),
 				info.getTarget(), info.getTransaction(), info.getHit());
-		nextNode.broadcast(newInfo);
+		this.execBroadcast(nextNode, newInfo);
+		//nextNode.broadcast(newInfo);
 		
 		//this.sendBroadcast(fingerTable, last, counter + 1, lastPos, info);
+	}
+	
+	private void execBroadcast(Node nextNode, Broadcast info){
+		this.asyncExecutor.execute(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					nextNode.broadcast(info);
+				} catch (CommunicationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		});
 	}
 	
 	// TODO: implement this function in TTP
