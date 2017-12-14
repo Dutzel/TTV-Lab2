@@ -147,12 +147,39 @@ public class BattlePlan implements NotifyCallback{
 	}
 
 	public void loadGrid(){
-		System.out.println("Loading BattlePlans grid... ");
+		// Maybe maxNodekey = 1432788095546260501072998183361034284646571229605 ?
+		System.out.println("--------------------------------------------");
+		System.out.println("Loading "+ impl.getURL() + "'s grid for ID: "); 
+		System.out.println(impl.getID().toBigInteger() + " length: " + impl.getID().toBigInteger().toString().length() );
+		System.out.println("of max:\n" + maxNodekey);
 		
-//		List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
-//				this.impl.getPredecessorID(), this.impl.getID());
-//		this.strategy.setownShipIntervals(ownShipIntervals);
-//		this.shipPositions = this.strategy.shipPlacementStrategy();
+		System.out.println(this.impl.printSuccessorList());
+	
+		List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
+				this.impl.getPredecessorID(), this.impl.getID());
+		
+		this.strategy.setownShipIntervals(ownShipIntervals);
+		this.shipPositions = this.strategy.shipPlacementStrategy();
+		
+		/**
+		 * Dustin: Eigentlich müssten wir laut Aufgabenstellung der erste Spieler sein,
+		 * wenn unsere ID dem MaxNode entspricht. Durch die Log-Ausgabe von oben bekommt jedoch kein
+		 * Knoten, den maxNodekey.
+		 * 
+		 * TODO: Prüfen wo der Fehler liegt.
+		 */
+//		if(impl.getID().toBigInteger() == maxNodekey){
+//			this.shoot(this.chooseTarget()); // We are the first player allowed to shoot
+//		    System.err.println("I am the very first player allowed to shoot!");
+//		}
+		/**
+		 * Dustin: Sind wir nicht der erste Spieler, wenn die ID unsers nächsten Successors
+		 * kleiner ist als die von uns?
+		 * TODO: Bitte einmal Prüfen, ob ich hier einen Denkfehler habe.
+		 */
+		if(this.impl.getID().toBigInteger().compareTo(this.impl.getFingerTable().get(0).getNodeID().toBigInteger()) == -1){
+			System.err.println("I am the very first player allowed to shoot!");
+		}
 	}
 	/**
 	 * This method implements our logic we want to follow to give the ships in our space a partiular position.

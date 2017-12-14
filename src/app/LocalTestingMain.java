@@ -31,28 +31,37 @@ public class LocalTestingMain {
 	}
 	
 	public void start() throws ServiceException, IOException{
-		this.initGame();
+		//this.initGameByTyping();
+		this.initGameWithoutTypting();
 		//this.waitForPlayers();
 		//this.startGameAfterEverybodyIsConnected();
 	}
 	
-	public void initGame() throws ServiceException, IOException{
+	public void initGameByTyping() throws ServiceException, IOException{
 		String consolInput;
 		while (true) {
-			System.out.println("Enter 'join' or 'create' to join or create a match");
+			System.out.println("Enter 'j' or 'c' to join or create a match");
 			System.out.println("");
 			consolInput = br.readLine();
 			System.out.println("You entered: " + consolInput);
-			if(consolInput.equals("join")){
+			if(consolInput.equals("j")){
 				this.joinMatch();
 				break;
-			}else if(consolInput.equals("create")){
+			}else if(consolInput.equals("c")){
 				this.createMatch();
 				break;
 			}else{
 				System.out.println("Wrong entry, please try again.");
 				System.out.println("");
 			}
+		}
+	}
+	
+	public void initGameWithoutTypting() throws ServiceException, IOException{
+		if(!this.url.equals(Config.getGameMaster())){
+			this.joinMatch();
+		}else{
+			this.createMatch();
 		}
 	}
 	
@@ -91,10 +100,6 @@ public class LocalTestingMain {
 			}
 			
 			for (int i = 0; i < amountTestPlayers; i++) {
-				players.get(i).waitForPlayers();
-			}
-			
-			for (int i = 0; i < amountTestPlayers; i++) {
 				players.get(i).startGameAfterEverybodyIsConnected();
 			}
 			
@@ -112,7 +117,7 @@ public class LocalTestingMain {
 		List<LocalTestingMain> players = new ArrayList<>();
 		URL currentUrl;
 		String ip = "oclocal://127.0.0.1:";
-		int port = 10001;
+		int port = 10000;
 		for (int i = 0; i < amountPlayers; i++) {
 			if(i == 0){
 				currentUrl = Config.getGameMaster();
