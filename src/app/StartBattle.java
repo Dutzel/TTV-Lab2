@@ -24,19 +24,17 @@ public class StartBattle {
 		PropertiesLoader.loadPropertyFile();
 		ChordImpl cImpl = new ChordImpl();
 		
-		
-		
 		try {
 			int port = 10000;
-			// //host[:port]
-			localURL1 = new URL("oclocal://127.0.0.1:10000/");
-			bootstrapURL = new URL("oclocal://127.0.0.1:10000/");
-			System.out.println("Enter join or 'create' to 'join' or create a match");
+			localURL1 = new URL("oclocal://127.0.0.1:"+port+"/");
+			bootstrapURL = new URL("oclocal://127.0.0.1:"+port+"/");
+			
 			
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 	        String entered;
 	        boolean test = false;
 			while (!test) {
+				System.out.println("Enter join or 'create' to 'join' or create a match");
 				entered = br.readLine();
 				System.out.println("You entered: " + entered);
 				if(entered.equals("join")){
@@ -52,24 +50,19 @@ public class StartBattle {
 			}
 			
 			System.out.println("Press enter to start game if everybody is ready!");
-			 br.readLine();
+			br.readLine();
+			cImpl.getBattlePlan().loadGrid();
+			
 		} catch (ServiceException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} // IP + Port
- catch (IOException e) {
+		catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		// Press 
-		
-	}
-	
-	public static void InitConnection(){
-	
-		
-		
 		
 	}
 

@@ -1,14 +1,17 @@
-package de.uniba.wiai.lspi.chord.service.impl;
+package app;
 
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.SynchronousQueue;
 
 import app.CoAPConnectionLED;
 import app.Strategy;
 import de.uniba.wiai.lspi.chord.data.ID;
 import de.uniba.wiai.lspi.chord.service.NotifyCallback;
+import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
+import de.uniba.wiai.lspi.chord.service.impl.ShipInterval;
 
 /**
  * This class represents the strategy we would like to proceed to win the battle.
@@ -57,10 +60,6 @@ public class BattlePlan implements NotifyCallback{
 //		this.cCon.turnOn();
 //		this.cCon.setColor("g");
 		this.strategy = strategy;
-		//List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
-		//		this.impl.getPredecessorID(), this.impl.getID());
-		//this.strategy.setownShipIntervals(ownShipIntervals);
-		//this.shipPositions = this.strategy.shipPlacementStrategy();
 	}
 
 	@Override
@@ -147,6 +146,14 @@ public class BattlePlan implements NotifyCallback{
 		//startStrategie(target);
 	}
 
+	public void loadGrid(){
+		System.out.println("Loading BattlePlans grid... ");
+		
+//		List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
+//				this.impl.getPredecessorID(), this.impl.getID());
+//		this.strategy.setownShipIntervals(ownShipIntervals);
+//		this.shipPositions = this.strategy.shipPlacementStrategy();
+	}
 	/**
 	 * This method implements our logic we want to follow to give the ships in our space a partiular position.
 	 */

@@ -43,6 +43,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import app.BattlePlan;
 import app.StrategyOne;
 import de.uniba.wiai.lspi.chord.com.Broadcast;
 import de.uniba.wiai.lspi.chord.com.CommunicationException;
@@ -148,8 +149,9 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	 * TODO: Consider whether we need some methods within ChordImpl or not.
 	 * But lets keep it this way for now.
 	 * TODO fabian: we do not need an instance here, because we have "localCallback" at line 214
+	 * TODO dustin: we need to set the battlePlan available in our main to load the battleplans grid.
 	 */
-	//private BattlePlan battlePlan;
+	private BattlePlan battlePlan;
 
 	/**
 	 * Entries stored at this node, including replicas.
@@ -412,9 +414,10 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		System.out.println("*******************");
 
 		//create BattlePlan instance for communication
-		//this.battlePlan = new BattlePlan(this);
+		
 		//TODO: announce the interface
-		this.setCallback(new BattlePlan(this, "localhost:5683", new StrategyOne()));
+		this.battlePlan = new BattlePlan(this, "localhost:5683", new StrategyOne());
+		this.setCallback(this.battlePlan);
 		
 		// create NodeImpl instance for communication
 		this.localNode = new NodeImpl(this, this.getID(), this.localURL, this.localCallback,
@@ -429,6 +432,10 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		// accept content requests from outside
 		this.localNode.acceptEntries();
 
+	}
+	
+	public BattlePlan getBattlePlan(){
+		return this.battlePlan;
 	}
 
 	/**
