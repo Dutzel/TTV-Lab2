@@ -15,3 +15,9 @@ Um dies umzusetzen haben wir eine abstrakte Klasse "Strategy" entworfen, welches
  Dadurch kennen wir bereits die NodeID unseres nächsten Ziels und können durch unser vorheriges "aushorchen" des Netzwerkes genau feststellen, welches Interval unser nächstes Ziel "verwaltet". Zunächst müssen wir dieses Intervall allerdings in 100 gleichgroße Intervalle einteilen in denen die 10 Schiffe möglicherweise platziert wurden. Erst mit dieser weiteren Einteilung können wir feststellen in welchem Interval dieses Spielers bereits Schiffe versenkt wurden oder missglückte Schüsse stattfanden. Kennen wir diejenigen Intervalle auf denen noch kein Schuss abgefeuert wurde, suchen wir uns ein zufälliges davon aus.
 
 **Eigene Schiffe platzieren** 
+Beispielstrategien zur Verteilung unserer Schiffe aus dem Spiel "Schiffe versenken" können wir nicht verwenden, da unsere Schiffe jeweils nur mit einem Feld gleichzusetzen sind und die Verteilungsstrategie in dem Spiel "Schiffe versenken" darauf bassiert den Gegner durch sich überlappende Schiffe-Teile zu verunsichern. Aus diesem Grund bleibt uns nichts anderes übrig die Schiffe innerhalb der Szene nach belieben zu verteilen. Ein eine Annahme, die wir auf unsere Verteilung der Schiffe anwenden können, ist also nur die Vermutung, wohin unserer Gegner schießen. Dabei gelten folgende Überlegungen:
+1. Schießen Gegner einfach im Sinn einer Iteration entlang unseres Intervalls?
+2. Schließen Gegner in die Gegenrichtung des erst genannten Punktes
+3. Wie können wir darauf reagieren, wenn die Gegner von beiden Seiten aus schießen? Bzw. können wir hier beispielsweise eine Schussstrategie ableiten?
+
+Es lässt sich vermuten, dass unsere Gegner über unser Intervall itterieren, folgedessen sollten wir unsere Schiffe gleichmäßig auf unser Intervall verteilen, dabei jedoch eine Streuung einbauen.
