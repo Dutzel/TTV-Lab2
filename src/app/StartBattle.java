@@ -45,7 +45,7 @@ public class StartBattle {
 				this.createMatch();
 				break;
 			}else{
-				System.out.println("Wront entry, please try again.");
+				System.out.println("Wrong entry, please try again.");
 				System.out.println("");
 			}
 		}

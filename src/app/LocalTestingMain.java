@@ -50,7 +50,7 @@ public class LocalTestingMain {
 				this.createMatch();
 				break;
 			}else{
-				System.out.println("Wront entry, please try again.");
+				System.out.println("Wrong entry, please try again.");
 				System.out.println("");
 			}
 		}
@@ -65,6 +65,11 @@ public class LocalTestingMain {
 		cImpl.create(url);
 	}
 	
+	public void waitForPlayers() throws IOException{
+		System.out.println("Press enter to start game if everybody is ready!");
+		br.readLine();
+	}
+	
 	private void startGameAfterEverybodyIsConnected(){
 		cImpl.getBattlePlan().loadGrid();
 		// determine our id via the network
@@ -77,12 +82,16 @@ public class LocalTestingMain {
 			
 			PropertiesLoader.loadPropertyFile();
 			
-			int amountTestPlayers = 2;
+			int amountTestPlayers = 4;
 			
 			List<LocalTestingMain> players = LocalTestingMain.loadTestMocks(amountTestPlayers);
 	
 			for (int i = 0; i < amountTestPlayers; i++) {
 				players.get(i).start();
+			}
+			
+			for (int i = 0; i < amountTestPlayers; i++) {
+				players.get(i).waitForPlayers();
 			}
 			
 			for (int i = 0; i < amountTestPlayers; i++) {
