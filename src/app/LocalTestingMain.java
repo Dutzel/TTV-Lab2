@@ -12,14 +12,19 @@ import de.uniba.wiai.lspi.chord.service.PropertiesLoader;
 import de.uniba.wiai.lspi.chord.service.ServiceException;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
 
-public class StartBattle {
+
+/**
+ * Class to test the broadcast functionality. 
+ * @author dustinspallek
+ *
+ */
+public class LocalTestingMain {
 	
 	private BufferedReader br;
 	private URL url;
 	private ChordImpl cImpl;
-	URL MasterURL;
 
-	public StartBattle(URL url) throws MalformedURLException{
+	public LocalTestingMain(URL url) throws MalformedURLException{
 		this.url = url;
 		cImpl = new ChordImpl();
 		br = new BufferedReader(new InputStreamReader(System.in));
@@ -27,8 +32,8 @@ public class StartBattle {
 	
 	public void start() throws ServiceException, IOException{
 		this.initGame();
-		this.waitForPlayers();
-		this.startGameAfterEverybodyIsConnected();
+		//this.waitForPlayers();
+		//this.startGameAfterEverybodyIsConnected();
 	}
 	
 	public void initGame() throws ServiceException, IOException{
@@ -60,12 +65,6 @@ public class StartBattle {
 		cImpl.create(url);
 	}
 	
-	
-	private void waitForPlayers() throws IOException{
-		System.out.println("Press enter to start game if everybody is ready!");
-		br.readLine();
-	}
-	
 	private void startGameAfterEverybodyIsConnected(){
 		cImpl.getBattlePlan().loadGrid();
 		// determine our id via the network
@@ -75,12 +74,21 @@ public class StartBattle {
 	
 	public static void main(String[] args) {		
 		try {
-			URL myGameUrl = new URL("oclocal://127.0.0.1:"+ 10001 +"/" );
 			
 			PropertiesLoader.loadPropertyFile();
 			
-			new StartBattle(myGameUrl).start();
-
+			int amountTestPlayers = 2;
+			
+			List<LocalTestingMain> players = LocalTestingMain.loadTestMocks(amountTestPlayers);
+	
+			for (int i = 0; i < amountTestPlayers; i++) {
+				players.get(i).start();
+			}
+			
+			for (int i = 0; i < amountTestPlayers; i++) {
+				players.get(i).startGameAfterEverybodyIsConnected();
+			}
+			
 		}
 		catch (IOException e) {
 			// Auto-generated catch block
@@ -89,6 +97,25 @@ public class StartBattle {
 			// Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public static List<LocalTestingMain> loadTestMocks(int amountPlayers) throws MalformedURLException{
+		List<LocalTestingMain> players = new ArrayList<>();
+		URL currentUrl;
+		String ip = "oclocal://127.0.0.1:";
+		int port = 10001;
+		for (int i = 0; i < amountPlayers; i++) {
+			if(i == 0){
+				currentUrl = Config.getGameMaster();
+				players.add(new LocalTestingMain(currentUrl));
+				System.out.println("GameMaster " + currentUrl + " added.");
+			}else{
+				currentUrl = new URL(ip+(port+i)+"/");
+				players.add(new LocalTestingMain(currentUrl));
+				System.out.println("PlayerUrl " + currentUrl + " added.");
+			}
+		}
+		return players;
 	}
 
 }

@@ -583,6 +583,10 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 							+ NUMBER_OF_SUCCESSORS);
 		}
 
+		//TODO: announce the interface
+		this.battlePlan = new BattlePlan(this, "localhost:5683", new StrategyOne());
+		this.setCallback(this.battlePlan);
+		
 		// create NodeImpl instance for communication
 		this.localNode = new NodeImpl(this, this.getID(), this.localURL, this.localCallback,
 				this.references, this.entries);

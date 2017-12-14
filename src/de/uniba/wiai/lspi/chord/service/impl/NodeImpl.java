@@ -121,9 +121,17 @@ public final class NodeImpl extends Node {
 
 		if (impl == null || nodeID == null || nodeURL == null
 				|| references == null || entries == null || nodeCallback == null) {
+			
+			String instances = 
+					"##impl: " + impl + 
+					"\n##nodeID: " + nodeID + 
+					"\n\n##nodeURL: " + nodeURL + 
+					"\n\n##references: " + references + 
+					"\n\n##entries: " + entries +
+					"\n\n##nodeCallback: " + nodeCallback;
 		    
 			throw new IllegalArgumentException(
-					"Parameters of the constructor may not have a null value!");
+					"Parameters of the constructor may not have a null value!\n" + instances);
 		}
 
 		this.logger = Logger.getLogger(NodeImpl.class.getName() + "." + nodeID.toString());
