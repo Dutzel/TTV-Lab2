@@ -31,8 +31,7 @@ import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.INFO;
 
 import java.io.Serializable;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -1066,6 +1065,24 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 
 	public final List<Node> getFingerTable() {
 		return this.references.getFingerTableEntries();
+	}
+	
+	/**
+	 * Sorts the fingertable by using a copy of the fingertable.
+	 * It sorts the table in a way, that the semantic of the returned
+	 * list is the same as the chord ring. 
+	 * @return A sorted list of nodes.
+	 */
+	public final List<Node> getSortedFingerTable(){
+		Node[] copy = this.references.getFingerTableCopy();
+		List<Node> sorted = new ArrayList<Node>();
+		for(int i = 0; i < copy.length; i++){
+			Node n = copy[i];
+			if(n != null && !sorted.contains(n)){
+				sorted.add(n);
+			}
+		}
+		return sorted;
 	}
 
 	public final String printSuccessorList() {

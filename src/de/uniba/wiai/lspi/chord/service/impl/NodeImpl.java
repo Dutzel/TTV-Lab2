@@ -502,10 +502,8 @@ public final class NodeImpl extends Node {
 		if (this.logger.isEnabledFor(DEBUG)) {
 			this.logger.debug(" Send broadcast message");
 		}
-
-		List<Node> sortedFingerTable = this.impl.getFingerTable();
-		// sort fingerTable by nodeID
-		sortedFingerTable.sort(Comparator.comparing(Node::getNodeID));
+		
+		List<Node> sortedFingerTable = this.impl.getSortedFingerTable();
 
 		// 2. case: broadcast comes from another node
 		if(!info.getRange().equals(info.getSource())){

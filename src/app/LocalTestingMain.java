@@ -32,7 +32,7 @@ public class LocalTestingMain {
 	
 	public void start() throws ServiceException, IOException{
 		//this.initGameByTyping();
-		this.initGameWithoutTypting();
+		this.initGameWithoutTyping();
 		//this.waitForPlayers();
 		//this.startGameAfterEverybodyIsConnected();
 	}
@@ -57,7 +57,7 @@ public class LocalTestingMain {
 		}
 	}
 	
-	public void initGameWithoutTypting() throws ServiceException, IOException{
+	public void initGameWithoutTyping() throws ServiceException, IOException{
 		if(!this.url.equals(Config.getGameMaster())){
 			this.joinMatch();
 		}else{
@@ -86,7 +86,7 @@ public class LocalTestingMain {
 		//		call chordimpl object via network object
 	}
 	
-	public static void main(String[] args) {		
+	public static void main(String[] args) throws InterruptedException {		
 		try {
 			
 			PropertiesLoader.loadPropertyFile();
@@ -97,6 +97,9 @@ public class LocalTestingMain {
 	
 			for (int i = 0; i < amountTestPlayers; i++) {
 				players.get(i).start();
+				// we need to wait, until every node is updated.
+				// if we no wait, we got wrong finger- and successor tables.
+				Thread.sleep(2000);
 			}
 			
 			for (int i = 0; i < amountTestPlayers; i++) {

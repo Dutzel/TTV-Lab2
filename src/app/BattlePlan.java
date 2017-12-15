@@ -1,6 +1,7 @@
 package app;
 
 import java.math.BigInteger;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,7 @@ import java.util.concurrent.SynchronousQueue;
 
 import app.CoAPConnectionLED;
 import app.Strategy;
+import de.uniba.wiai.lspi.chord.com.Node;
 import de.uniba.wiai.lspi.chord.data.ID;
 import de.uniba.wiai.lspi.chord.service.NotifyCallback;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
@@ -149,6 +151,7 @@ public class BattlePlan implements NotifyCallback{
 	public void loadGrid(){
 		// Maybe maxNodekey = 1432788095546260501072998183361034284646571229605 ?
 		System.out.println("--------------------------------------------");
+		System.out.println("I am: " + this.impl.getID());
 		System.out.println("Loading "+ impl.getURL() + "'s grid for ID: "); 
 		System.out.println(impl.getID().toBigInteger() + " length: " + impl.getID().toBigInteger().toString().length() );
 		System.out.println("of max:\n" + maxNodekey);
@@ -178,7 +181,7 @@ public class BattlePlan implements NotifyCallback{
 		 * TODO: Bitte einmal Prüfen, ob ich hier einen Denkfehler habe.
 		 */
 		if(this.impl.getID().toBigInteger().compareTo(this.impl.getFingerTable().get(0).getNodeID().toBigInteger()) == -1){
-			System.err.println("I am the very first player allowed to shoot!");
+			System.err.println("I am (" + this.impl.getID() + ") the very first player allowed to shoot!");
 		}
 	}
 	/**
