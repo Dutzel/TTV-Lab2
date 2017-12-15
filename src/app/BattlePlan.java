@@ -22,7 +22,7 @@ import de.uniba.wiai.lspi.chord.service.impl.ShipInterval;
  */
 public class BattlePlan implements NotifyCallback{
 
-	private ChordImpl impl;
+	public ChordImpl impl;
 	private BigInteger maxNodekey;
 	private Map<ShipInterval, Boolean> shipPositions;
 	private CoAPConnectionLED cCon;
@@ -52,6 +52,16 @@ public class BattlePlan implements NotifyCallback{
 
 	@Override
 	public void retrieved(ID target) {
+		/**
+		 * TODO: Bis hierhin funktioniert es schonmal. Die Spieler beschießen sich und der auskommentierte
+		 * Ausdruck wird in der Console gespammt bis zum Buffer overflow.
+		 * 
+		 * Allerdigs scheint noch ein Fehler im Broadcast der NodeImpl vorzuliegen.
+		 * Transaktionsid prüfen?
+		 * 
+		 */
+		//System.err.println("##### (" + this.impl.getID() + ") was shot!");
+		
 		/** First we need to check if we are in range of the shot.
 		 * If we are in range we should setup our ships position as mentioned below.
 		 * This can only happen once and right after receiving the first shot in our range.
@@ -121,40 +131,25 @@ public class BattlePlan implements NotifyCallback{
 	}
 
 	public void loadGrid(){
-		// Maybe maxNodekey = 1432788095546260501072998183361034284646571229605 ?
-		System.out.println("--------------------------------------------");
-		System.out.println("I am: " + this.impl.getID());
-		System.out.println("Loading "+ impl.getURL() + "'s grid for ID: "); 
-		System.out.println(impl.getID().toBigInteger() + " length: " + impl.getID().toBigInteger().toString().length() );
-		System.out.println("of max:\n" + maxNodekey);
-		
-		System.out.println(this.impl.printSuccessorList());
+		debugText();
 	
 		List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
 				this.impl.getPredecessorID(), this.impl.getID());
 		
-		this.strategy.setownShipIntervals(ownShipIntervals);
+		this.strategy.setOwnShipIntervals(ownShipIntervals);
 		this.shipPositions = this.strategy.shipPlacementStrategy();
 		
 		/**
-		 * Dustin: Sind wir nicht der erste Spieler, wenn die ID unsers nächsten Successors
-		 * kleiner ist als die von uns? 
-		 * fabian: da ist was dran :)
-		 * TODO: Bitte einmal Prüfen, ob ich hier einen Denkfehler habe. 
-		 * solved: das kommt nicht ganz hin..
-		 * zum einen ist die fingertable nicht sortiert, sodass du den ersten eintrag nicht nehmen kannst.
-		 * zum anderen muss es == +1 heißen nicht -1, da bei -1 geprüft wird, ob das spezifische objekt 
-		 * (unsere id) kleiner als das objekt ist, welches übergegen wird. es ist größer, wenn +1 rauskommt.
-		 * aus der java doc zu comparable: "a negative integer, zero, or a positive integer as this object is less than, equal to, or greater than the specified object."
-		 * ebenso gibt es ja unterschiedliche threads, sodass man bei der ausgabe noch die eigene id
-		 * mit angeben sollte, da die ausgabe irgendwann passiert und nicht notwendigerweise wenn auch der 
-		 * knoten die obige ausgabe macht.
+		 * So sollte die Implementierung nun stimmen. Siehe issue "ermittelung des startknotens #3"
+		 * TODO: Dustin: Wenn du hiermit einverstanden bist, kannst den Kommentar einfasch löschen :)
 		 */
-		Node firstNodeInNetwork = this.impl.getSortedFingerTable().get(0);
-		if(this.impl.getID().toBigInteger().compareTo(firstNodeInNetwork.getNodeID().toBigInteger()) == 1){
+
+		if((this.impl.getPredecessorID().toBigInteger().compareTo(maxNodekey) == -1) && 
+				this.impl.getID().toBigInteger().compareTo(this.impl.getPredecessorID().toBigInteger()) == -1){
 			System.err.println("I am (" + this.impl.getID() + ") the very first player allowed to shoot!");
-			//this.shoot(this.chooseTarget()); // We are the first player allowed to shoot
+			this.impl.retrieve(chooseTarget());
 		}
+
 	}
 
 	/**
@@ -232,5 +227,13 @@ public class BattlePlan implements NotifyCallback{
 			color = "r";
 		}
 		this.cCon.setColor(color);
+	}
+	
+	private void debugText(){
+		System.out.println("--------------------------------------------");
+		System.out.println("I am: " + this.impl.getID());
+		System.out.println("Loading "+ impl.getURL() + "'s grid for ID: "); 
+		System.out.println(impl.getID().toBigInteger() + " length: " + impl.getID().toBigInteger().toString().length() );
+		System.out.println("of max:\n" + maxNodekey);
 	}
 }
