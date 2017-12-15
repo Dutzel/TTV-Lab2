@@ -7,6 +7,7 @@ import java.util.Map;
 
 import app.CoAPConnectionLED;
 import app.Strategy;
+import de.uniba.wiai.lspi.chord.com.Node;
 import de.uniba.wiai.lspi.chord.data.ID;
 import de.uniba.wiai.lspi.chord.service.NotifyCallback;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
@@ -136,24 +137,23 @@ public class BattlePlan implements NotifyCallback{
 		this.shipPositions = this.strategy.shipPlacementStrategy();
 		
 		/**
-		 * Dustin: Eigentlich müssten wir laut Aufgabenstellung der erste Spieler sein,
-		 * wenn unsere ID dem MaxNode entspricht. Durch die Log-Ausgabe von oben bekommt jedoch kein
-		 * Knoten, den maxNodekey.
-		 * 
-		 * TODO: Prüfen wo der Fehler liegt.
-		 */
-//		if(impl.getID().toBigInteger() == maxNodekey){
-//			this.shoot(this.chooseTarget()); // We are the first player allowed to shoot
-//		    System.err.println("I am the very first player allowed to shoot!");
-//		}
-		/**
 		 * Dustin: Sind wir nicht der erste Spieler, wenn die ID unsers nächsten Successors
-		 * kleiner ist als die von uns?
-		 * TODO: Bitte einmal Prüfen, ob ich hier einen Denkfehler habe.
+		 * kleiner ist als die von uns? 
+		 * fabian: da ist was dran :)
+		 * TODO: Bitte einmal Prüfen, ob ich hier einen Denkfehler habe. 
+		 * solved: das kommt nicht ganz hin..
+		 * zum einen ist die fingertable nicht sortiert, sodass du den ersten eintrag nicht nehmen kannst.
+		 * zum anderen muss es == +1 heißen nicht -1, da bei -1 geprüft wird, ob das spezifische objekt 
+		 * (unsere id) kleiner als das objekt ist, welches übergegen wird. es ist größer, wenn +1 rauskommt.
+		 * aus der java doc zu comparable: "a negative integer, zero, or a positive integer as this object is less than, equal to, or greater than the specified object."
+		 * ebenso gibt es ja unterschiedliche threads, sodass man bei der ausgabe noch die eigene id
+		 * mit angeben sollte, da die ausgabe irgendwann passiert und nicht notwendigerweise wenn auch der 
+		 * knoten die obige ausgabe macht.
 		 */
-		if(this.impl.getID().toBigInteger().compareTo(this.impl.getFingerTable().get(0).getNodeID().toBigInteger()) == -1){
+		Node firstNodeInNetwork = this.impl.getSortedFingerTable().get(0);
+		if(this.impl.getID().toBigInteger().compareTo(firstNodeInNetwork.getNodeID().toBigInteger()) == 1){
 			System.err.println("I am (" + this.impl.getID() + ") the very first player allowed to shoot!");
-			this.shoot(this.chooseTarget()); // We are the first player allowed to shoot
+			//this.shoot(this.chooseTarget()); // We are the first player allowed to shoot
 		}
 	}
 
