@@ -9,23 +9,28 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import de.uniba.wiai.lspi.chord.data.ID;
+import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
 import de.uniba.wiai.lspi.chord.service.impl.ShipInterval;
 
 public abstract class Strategy {
 
 	private Map<ID, ArrayList<ID>> hitEnemyShips;
 	private Map<ID, ArrayList<ID>> noHitEnemyShips;
+	private Map<ID, ArrayList<ID>> completeHitInfoEnemyShips;
 	private Map<ID, Integer> enemiesWithShipCount;
 	private List<ShipInterval> ownShipIntervals;
-
 	private ID startOwnInterval;
 	private ID endOwnInterval;
+	private List<ShipInterval> ourPlacedShipsWithinOutInterval;
 	
 	private static final int INTERVALSIZE = 100;
 	private static final int SHIPCOUNT = 10;
+	public ChordImpl impl;
 	
-	public Strategy(){
+	public Strategy(ChordImpl impl){
+		this.impl = impl;
 		this.hitEnemyShips = new HashMap<ID, ArrayList<ID>>();
+		this.completeHitInfoEnemyShips = new HashMap<ID, ArrayList<ID>>();
 		this.noHitEnemyShips = new HashMap<ID, ArrayList<ID>>();
 		this.enemiesWithShipCount = new HashMap<ID, Integer>();
 		this.startOwnInterval = null;
@@ -37,11 +42,9 @@ public abstract class Strategy {
 	public abstract ID chooseTargetStrategy();
 	
 	/**
-	 * // Frage: Wollen wir Target nicht die Pos hinzufügen an der es getroffen wurde?
-	 * Wenn Source = Beschossener User & Target = beschossene Position im Interval des Users,
-	 * dann sollten wir source und target umbenennen, da es sonst irreführend ist, bsp.:
-	 * source => attackedEnemy,
-	 * target => target
+	 * Sobald ein Broadcast einen Gegner meldet, dessen Schiff getroffen wurde, wird diese Methode 
+	 * ausgeführt. Diese Methode nimmt die Information entgegen und speichert sie in hitEnemyShips.
+	 * 
 	 * @param attackedEnemy
 	 * @param target
 	 */
@@ -50,6 +53,8 @@ public abstract class Strategy {
 		if(enemy == null){
 			this.hitEnemyShips.put(attackedEnemy, 
 					(ArrayList<ID>) Stream.of(target).collect(Collectors.toList()));
+			this.completeHitInfoEnemyShips.put(attackedEnemy, 
+					(ArrayList<ID>) Stream.of(target).collect(Collectors.toList()));
 		}
 		else{
 			enemy.add(target);
@@ -57,9 +62,11 @@ public abstract class Strategy {
 	}
 	
 	public void addNoHitTarget(ID attackedEnemy, ID target){
-		ArrayList<ID> enemy = this.noHitEnemyShips.get(attackedEnemy);
+		ArrayList<ID> enemy = this.getNoHitEnemyShips().get(attackedEnemy);
 		if(enemy == null){
 			this.noHitEnemyShips.put(attackedEnemy, 
+					(ArrayList<ID>) Stream.of(target).collect(Collectors.toList()));
+			this.completeHitInfoEnemyShips.put(attackedEnemy, 
 					(ArrayList<ID>) Stream.of(target).collect(Collectors.toList()));
 		}
 		else{
@@ -143,5 +150,24 @@ public abstract class Strategy {
 
 	public int getShipCount() {
 		return Strategy.SHIPCOUNT;
-	}	
+	}
+
+	public List<ShipInterval> getOwnShipIntervals() {
+		return ownShipIntervals;
+	}
+
+	public Map<ID, ArrayList<ID>> getNoHitEnemyShips() {
+		return noHitEnemyShips;
+	}
+	
+	public Map<ID, ArrayList<ID>> getHitEnemyShips() {
+		return hitEnemyShips;
+	}
+	
+	public Map<ID, ArrayList<ID>> getCompleteHitInfoEnemyShips() {
+		return completeHitInfoEnemyShips;
+	}
+	
+	
+
 }
