@@ -140,22 +140,17 @@ public class BattlePlan implements NotifyCallback{
 		this.shipPositions = this.strategy.shipPlacementStrategy();
 		
 		ID predecID= this.impl.getPredecessorID();
-		ID startOwnInterval = new ID(predecID.toBigInteger().add(new BigInteger("1")).toByteArray());
+		ID startOwnInterval = ID.valueOf(predecID.toBigInteger().add(new BigInteger("1")));
 		this.strategy.setStartOwnInterval(startOwnInterval);
 		this.strategy.setEndOwnInterval(this.impl.getID());
 		System.out.println("start: " + startOwnInterval.toDecimalString());
 		System.out.println("end: " + this.impl.getID().toDecimalString());
 		System.out.println("target: " + this.chooseTarget());
 		
-		/**
-		 * So sollte die Implementierung nun stimmen. Siehe issue "ermittelung des startknotens #3"
-		 * TODO: Dustin: Wenn du hiermit einverstanden bist, kannst den Kommentar einfasch löschen :)
-		 */
-
-		if((this.impl.getPredecessorID().toBigInteger().compareTo(maxNodekey) == -1) && 
-				this.impl.getID().toBigInteger().compareTo(this.impl.getPredecessorID().toBigInteger()) == -1){
+		if(!(this.impl.getPredecessorID().equals(ID.valueOf(this.maxNodekey))) &&
+				(this.impl.getID().toBigInteger().compareTo(this.impl.getPredecessorID().toBigInteger()) == -1)){
 			System.err.println("I am (" + this.impl.getID() + ") the very first player allowed to shoot!");
-			this.impl.retrieve(chooseTarget());
+			//this.impl.retrieve(chooseTarget());
 		}
 
 	}

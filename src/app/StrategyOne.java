@@ -90,7 +90,7 @@ public class StrategyOne extends Strategy {
 		 *  TODO: Besteht hier noch die Chance, dass wir auf uns selber schießen, wenn die Fingertabelle zu klein ist?
 		 */
 		int targetPos =  new Random().nextInt(this.impl.getFingerTable().size());
-		target =  new ID(this.impl.getFingerTable().get(targetPos).getNodeID().toBigInteger().add(new BigInteger("1")).toByteArray());
+		target =  ID.valueOf(this.impl.getFingerTable().get(targetPos).getNodeID().toBigInteger().add(new BigInteger("1")));
 		return target;
 	}
     
@@ -117,10 +117,10 @@ public class StrategyOne extends Strategy {
 	 */
 	private ID calculateShootToUntouchedField(ID enemyTarget){	
 		
-		ID shotPos = new ID(enemyTarget.toBigInteger().subtract(new BigInteger("1")).toByteArray());
+		ID shotPos = ID.valueOf(enemyTarget.toBigInteger().subtract(new BigInteger("1")));
 		
 		while(this.getCompleteHitInfoEnemyShips().get(enemyTarget).contains(shotPos)){
-			shotPos = new ID(shotPos.toBigInteger().subtract(new BigInteger("1")).toByteArray());
+			shotPos = ID.valueOf(shotPos.toBigInteger().subtract(new BigInteger("1")));
 		}
 		
 		return shotPos;

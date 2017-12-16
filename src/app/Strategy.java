@@ -98,16 +98,16 @@ public abstract class Strategy {
 		for(int i = 1; i <= Strategy.INTERVALSIZE; i++){
 			if(!mod.equals(new BigInteger("0"))){
 				intervalEnd = startBigInt.add(intervalSize);
-				from = new ID(startBigInt.toByteArray());
-				to = new ID(intervalEnd.toByteArray());
+				from = ID.valueOf(startBigInt);
+				to = ID.valueOf(intervalEnd);
 				// need to add 1, because of dissimilar intervalSize
 				startBigInt = startBigInt.add(new BigInteger(intervalSize.toString())).add(new BigInteger("1"));
 				mod = mod.subtract(new BigInteger("1"));
 			}else{
 				// need to subtract 1, because intervalEnd reduced by 1
 				intervalEnd = startBigInt.add(intervalSize).subtract(new BigInteger("1"));
-				from = new ID(startBigInt.toByteArray());
-				to = new ID(intervalEnd.toByteArray());
+				from = ID.valueOf(startBigInt);
+				to = ID.valueOf(intervalEnd);
 				startBigInt = startBigInt.add(new BigInteger(intervalSize.toString()));
 			}
 			shipInterval.add(new ShipInterval(from, to));
