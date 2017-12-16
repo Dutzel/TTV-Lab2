@@ -1,36 +1,49 @@
-package app;
+package app.test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
 
+import app.Config;
 import de.uniba.wiai.lspi.chord.data.URL;
-import de.uniba.wiai.lspi.chord.service.PropertiesLoader;
 import de.uniba.wiai.lspi.chord.service.ServiceException;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
 
-
-/**
- * Class to test the broadcast functionality. 
- * @author dustinspallek
- *
- */
-public class LocalTestingMain {
-	
+public class TestThread extends Thread {
 	private BufferedReader br;
 	private URL url;
 	private ChordImpl cImpl;
 
-	public LocalTestingMain(URL url) throws MalformedURLException{
+	public TestThread(URL url) throws MalformedURLException{
 		this.url = url;
 		cImpl = new ChordImpl();
 		br = new BufferedReader(new InputStreamReader(System.in));
 	}
 	
-	public void start() throws ServiceException, IOException{
+	@Override
+	public void run() {
+		super.run();
+		try {
+			this.init();
+			// we need to wait, until every node is updated.
+			// if we no wait, we got wrong finger- and successor tables.
+			Thread.sleep(2000);
+			this.startGameAfterEverybodyIsConnected();
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		};
+
+	}
+	
+	public void init() throws ServiceException, IOException{
 		//this.initGameByTyping();
 		this.initGameWithoutTyping();
 		//this.waitForPlayers();
@@ -66,6 +79,12 @@ public class LocalTestingMain {
 	}
 	
 	private void joinMatch() throws ServiceException, MalformedURLException{
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		cImpl.setURL(url);
 		cImpl.join(Config.getGameMaster());
 	}
@@ -79,60 +98,11 @@ public class LocalTestingMain {
 		br.readLine();
 	}
 	
-	private void startGameAfterEverybodyIsConnected(){
+	private void startGameAfterEverybodyIsConnected() throws InterruptedException{
 		cImpl.getBattlePlan().loadGrid();
 		// determine our id via the network
 		// if we are the highest id, we need to start with the battle
 		//		call chordimpl object via network object
-	}
-	
-	public static void main(String[] args) throws InterruptedException {		
-		try {
-			
-			PropertiesLoader.loadPropertyFile();
-			
-			int amountTestPlayers = 4;
-			
-			List<LocalTestingMain> players = LocalTestingMain.loadTestMocks(amountTestPlayers);
-	
-			for (int i = 0; i < amountTestPlayers; i++) {
-				players.get(i).start();
-				// we need to wait, until every node is updated.
-				// if we no wait, we got wrong finger- and successor tables.
-				Thread.sleep(2000);
-			}
-			
-			for (int i = 0; i < amountTestPlayers; i++) {
-				players.get(i).startGameAfterEverybodyIsConnected();
-			}
-			
-		}
-		catch (IOException e) {
-			// Auto-generated catch block
-			e.printStackTrace();
-		} catch (ServiceException e) {
-			// Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	public static List<LocalTestingMain> loadTestMocks(int amountPlayers) throws MalformedURLException{
-		List<LocalTestingMain> players = new ArrayList<>();
-		URL currentUrl;
-		String ip = "oclocal://127.0.0.1:";
-		int port = 10000;
-		for (int i = 0; i < amountPlayers; i++) {
-			if(i == 0){
-				currentUrl = Config.getGameMaster();
-				players.add(new LocalTestingMain(currentUrl));
-				System.out.println("GameMaster " + currentUrl + " added.");
-			}else{
-				currentUrl = new URL(ip+(port+i)+"/");
-				players.add(new LocalTestingMain(currentUrl));
-				System.out.println("PlayerUrl " + currentUrl + " added.");
-			}
-		}
-		return players;
 	}
 
 }

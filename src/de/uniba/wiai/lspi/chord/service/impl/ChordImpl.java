@@ -44,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 
 import app.BattlePlan;
 import app.StrategyOne;
-import app.StrategyTest;
 import de.uniba.wiai.lspi.chord.com.Broadcast;
 import de.uniba.wiai.lspi.chord.com.CommunicationException;
 import de.uniba.wiai.lspi.chord.com.Entry;

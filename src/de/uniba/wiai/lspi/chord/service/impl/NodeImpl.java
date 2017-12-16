@@ -445,11 +445,17 @@ public final class NodeImpl extends Node {
 		// not change the if statements!
 		// stop criterion for 2. case
 		if(nextNode.getNodeID().equals(info.getRange())){
-			// no node between us and the range
+			// no node between us and the range	
+			if (this.logger.isEnabledFor(DEBUG)) {
+				this.logger.debug("Inform broadcast: break sending, because there is no note between us and range");
+			}
 			return;
 		}
 		// stop criterion for 1. case
-		if(counter == sortedFingerTable.size() - 1){
+		if(counter == sortedFingerTable.size() - 1){		
+			if (this.logger.isEnabledFor(DEBUG)) {
+			this.logger.debug("Retrieved broadcast: send single broadcast: " + info.toString() + " to nextNode: " + nextNode.getNodeID());
+		}
 			this.execBroadcast(nextNode, info);
 			//nextNode.broadcast(info);
 			return;
@@ -464,6 +470,9 @@ public final class NodeImpl extends Node {
 			int counter, Broadcast info) throws CommunicationException{
 		Broadcast newInfo = new Broadcast(nextNextNodeID, info.getSource(),
 				info.getTarget(), info.getTransaction(), info.getHit());
+		if (this.logger.isEnabledFor(DEBUG)) {
+			this.logger.debug("Inform/Retrieved broadcast: send broadcast: " + newInfo + " to nextNode: " + nextNode.getNodeID());
+		}
 		this.execBroadcast(nextNode, newInfo);
 		//nextNode.broadcast(newInfo);
 		
@@ -499,16 +508,19 @@ public final class NodeImpl extends Node {
 		 * 		and we need to send a broadcast to all nodes in fingerTable 
 		 * 		which are placed between our node an the given range.
 		*/
-		if (this.logger.isEnabledFor(DEBUG)) {
-			this.logger.debug(" Send broadcast message");
-		}
+//		if (this.logger.isEnabledFor(DEBUG)) {
+//			this.logger.debug(" Send broadcast message: " + info.toString());
+//		}
 		
 		List<Node> sortedFingerTable = this.impl.getSortedFingerTable();
 
 		// 2. case: broadcast comes from another node
-		if(!info.getRange().equals(info.getSource())){
+		if(!this.getNodeID().equals(info.getSource())){
 			// inform application
 			if (this.notifyCallback != null) {
+				if (this.logger.isEnabledFor(DEBUG)) {
+					this.logger.debug("Inform my application about the broadcast from another node: " + info.toString());
+				}
 				this.notifyCallback.broadcast(info.getSource(), info.getTarget(), info.getHit());
 				}
 		}

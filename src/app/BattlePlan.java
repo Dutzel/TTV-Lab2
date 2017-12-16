@@ -1,5 +1,7 @@
 package app;
 
+import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
+
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
@@ -7,11 +9,11 @@ import java.util.Map;
 
 import app.CoAPConnectionLED;
 import app.Strategy;
-import de.uniba.wiai.lspi.chord.com.Node;
 import de.uniba.wiai.lspi.chord.data.ID;
 import de.uniba.wiai.lspi.chord.service.NotifyCallback;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
 import de.uniba.wiai.lspi.chord.service.impl.ShipInterval;
+import de.uniba.wiai.lspi.util.logging.Logger;
 
 /**
  * This class represents the strategy we would like to proceed to win the battle.
@@ -26,6 +28,7 @@ public class BattlePlan implements NotifyCallback{
 	private BigInteger maxNodekey;
 	private Map<ShipInterval, Boolean> shipPositions;
 	private CoAPConnectionLED cCon;
+	private Logger logger;
 	
 	/**
 	 * Our strategy of ship placements and choosing a target.
@@ -38,7 +41,9 @@ public class BattlePlan implements NotifyCallback{
 	private ID lastShotTarget = null;
 
 	public BattlePlan(ChordImpl impl, String coapUri, Strategy strategy) {
+		this.logger = Logger.getLogger(BattlePlan.class.getName());
 		this.impl = impl;
+		this.logDebug("Logger initialized.");
 		this.shipPositions = new HashMap<ShipInterval, Boolean>();
 		calcMaxNodekey();
 		
@@ -79,12 +84,11 @@ public class BattlePlan implements NotifyCallback{
 		//check if target is in one of our intervals where we placed a ship
 		boolean hit = checkShipPlacement(target);
 		if(hit){
-			// TODO: logging :)
 			this.setSensorColor();
 		}
+		this.logDebug("Got a broadcast on target: " + target + "; the hit was: " + hit);
 		this.impl.broadcast(target, hit);
-		ID ourTarget = this.chooseTarget();
-		this.shoot(ourTarget);
+		this.shoot();
 	}
 
 	@Override
@@ -130,26 +134,26 @@ public class BattlePlan implements NotifyCallback{
 		this.lastShotTarget = null;
 	}
 
-	public void loadGrid(){
+	public void loadGrid() throws InterruptedException{
 		debugText();
 	
 		List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
 				this.impl.getPredecessorID(), this.impl.getID());
 		
 		this.strategy.setOwnShipIntervals(ownShipIntervals);
+		
 		this.shipPositions = this.strategy.shipPlacementStrategy();
 		
 		ID predecID= this.impl.getPredecessorID();
 		ID startOwnInterval = ID.valueOf(predecID.toBigInteger().add(new BigInteger("1")));
 		this.strategy.setStartOwnInterval(startOwnInterval);
 		this.strategy.setEndOwnInterval(this.impl.getID());
-		System.out.println("start: " + startOwnInterval.toDecimalString());
-		System.out.println("end: " + this.impl.getID().toDecimalString());
-		System.out.println("target: " + this.chooseTarget());
-		
+
 		if(!(this.impl.getPredecessorID().equals(ID.valueOf(this.maxNodekey))) &&
 				(this.impl.getID().toBigInteger().compareTo(this.impl.getPredecessorID().toBigInteger()) == -1)){
-			System.err.println("I am (" + this.impl.getID() + ") the very first player allowed to shoot!");
+			this.logDebug("I am the very first player allowed to shoot!");
+			Thread.sleep(2000);
+			this.shoot();
 			//this.impl.retrieve(chooseTarget());
 		}
 
@@ -169,10 +173,12 @@ public class BattlePlan implements NotifyCallback{
 	 * This simple method is responsible to perform a shoot on a given target.
 	 * @param target
 	 */
-	private void shoot(ID target){
+	private void shoot(){
 		//TODO: broadcast to target.
+		ID target = this.chooseTarget();
 		this.lastShotTarget = target;
-		this.impl.retrieve(target);
+		this.logDebug("I am shooting on target: " + target);
+		//this.impl.retrieve(target);
 	}
 
 	/**
@@ -232,11 +238,16 @@ public class BattlePlan implements NotifyCallback{
 		this.cCon.setColor(color);
 	}
 	
+	private void logDebug(String text){
+		if (this.logger.isEnabledFor(DEBUG)) {
+			this.logger.debug(this.impl.getID() + ": " + text);
+		}
+	}
+	
 	private void debugText(){
-		System.out.println("--------------------------------------------");
-		System.out.println("I am: " + this.impl.getID());
-		System.out.println("Loading "+ impl.getURL() + "'s grid for ID: "); 
-		System.out.println(impl.getID().toBigInteger() + " length: " + impl.getID().toBigInteger().toString().length() );
-		System.out.println("of max:\n" + maxNodekey);
+		this.logDebug("Loading "+ impl.getURL() + "'s grid for ID: "); 
+		this.logDebug(impl.getID().toBigInteger() + " length: " + impl.getID().toBigInteger().toString().length() );
+		this.logDebug("of max:\n" + maxNodekey);
+		this.logDebug(this.impl.printFingerTable());
 	}
 }

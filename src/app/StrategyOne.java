@@ -1,5 +1,7 @@
 package app;
 
+import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,12 +12,15 @@ import java.util.Random;
 import de.uniba.wiai.lspi.chord.data.ID;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
 import de.uniba.wiai.lspi.chord.service.impl.ShipInterval;
+import de.uniba.wiai.lspi.util.logging.Logger;
 
 public class StrategyOne extends Strategy {
 
+	private Logger logger;
 	public StrategyOne(ChordImpl impl) {
 		super(impl);
-		// TODO Auto-generated constructor stub
+		this.logger = Logger.getLogger(StrategyOne.class.getName());
+		this.logDebug("Logger initialized.");
 	}
 
 	/**
@@ -30,7 +35,7 @@ public class StrategyOne extends Strategy {
 	 */
 	@Override
 	public Map<ShipInterval, Boolean> shipPlacementStrategy() {
-		System.out.println("Placing Ships.");
+		this.logDebug("Placing Ships.");
 		List<Integer> usedPositions = new ArrayList<>();
 		Map<ShipInterval, Boolean> shipPositions = new HashMap<ShipInterval, Boolean>();;
 
@@ -47,7 +52,7 @@ public class StrategyOne extends Strategy {
 				shipPos =  new Random().nextInt(this.getOwnShipIntervals().size());
 			}
 		}
-		// showShipPlacement(shipPositions);
+		showShipPlacement(shipPositions);
 		return shipPositions;
 	}
 
@@ -89,9 +94,9 @@ public class StrategyOne extends Strategy {
 		 * 
 		 *  TODO: Besteht hier noch die Chance, dass wir auf uns selber schießen, wenn die Fingertabelle zu klein ist?
 		 */
-		int targetPos =  new Random().nextInt(this.impl.getFingerTable().size());
-		target =  ID.valueOf(this.impl.getFingerTable().get(targetPos).getNodeID().toBigInteger().add(new BigInteger("1")));
-		return target;
+		//int targetPos =  new Random().nextInt(this.impl.getSortedFingerTable().size());
+		//target =  ID.valueOf(this.impl.getSortedFingerTable().get(targetPos).getNodeID().toBigInteger().add(new BigInteger("1")));
+		return this.chooseRandomTarget();
 	}
     
 	/**
@@ -100,7 +105,7 @@ public class StrategyOne extends Strategy {
 	 */
 	public void showShipPlacement(Map<ShipInterval, Boolean> shipPositions){
 		for(Map.Entry<ShipInterval, Boolean> entry : shipPositions.entrySet()) {
-		    System.out.println("Ship position: " + entry.getKey().toString());
+			this.logDebug("Ship position: " + entry.getKey().toString());
 		}
 	}
 	/**
@@ -124,5 +129,34 @@ public class StrategyOne extends Strategy {
 		}
 		
 		return shotPos;
+	}
+	
+	private ID chooseRandomTarget() {
+		BigInteger rnd;
+		ID target;
+		do {
+			rnd = this.generateRandomBigInt();
+			target = ID.valueOf(rnd);
+			//TODO: abfrage stimmt noch nicht: sonderfall von startknoten behandeln, da der start des 
+			//intervalls der letzte knoten im ring ist und daher vor null liegt -> schießt auf sich selbst.
+			System.out.println("eq and gr: " + (target.compareTo(this.getStartOwnInterval()) > -1));
+			System.out.println("eq and le: " + (target.compareTo(this.getEndOwnInterval()) < 1));
+		} while ((target.compareTo(this.getStartOwnInterval()) > -1) &&
+				(target.compareTo(this.getEndOwnInterval()) < 1));
+		return target;
+	}
+	
+	private BigInteger generateRandomBigInt(){
+		BigInteger rnd = new BigInteger(160, new Random());
+		if (rnd.compareTo(new BigInteger("0")) == 0){
+			return this.generateRandomBigInt();
+		}
+		return rnd;
+	}
+	
+	private void logDebug(String text){
+		if (this.logger.isEnabledFor(DEBUG)) {
+			this.logger.debug(this.impl.getID() + ": " + text);
+		}
 	}
 }

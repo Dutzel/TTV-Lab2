@@ -25,7 +25,7 @@ public class StartBattle {
 		br = new BufferedReader(new InputStreamReader(System.in));
 	}
 	
-	public void start() throws ServiceException, IOException{
+	public void start() throws ServiceException, IOException, InterruptedException{
 		this.initGame();
 		this.waitForPlayers();
 		this.startGameAfterEverybodyIsConnected();
@@ -66,14 +66,14 @@ public class StartBattle {
 		br.readLine();
 	}
 	
-	private void startGameAfterEverybodyIsConnected(){
+	private void startGameAfterEverybodyIsConnected() throws InterruptedException{
 		cImpl.getBattlePlan().loadGrid();
 		// determine our id via the network
 		// if we are the highest id, we need to start with the battle
 		//		call chordimpl object via network object
 	}
 	
-	public static void main(String[] args) {		
+	public static void main(String[] args) throws InterruptedException {		
 		try {
 			URL myGameUrl = new URL("oclocal://127.0.0.1:"+ 10001 +"/" );
 			
