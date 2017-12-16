@@ -17,6 +17,10 @@ public abstract class Strategy {
 	private Map<ID, ArrayList<ID>> noHitEnemyShips;
 	private Map<ID, Integer> enemiesWithShipCount;
 	private List<ShipInterval> ownShipIntervals;
+
+	private ID startOwnInterval;
+	private ID endOwnInterval;
+	
 	private static final int INTERVALSIZE = 100;
 	private static final int SHIPCOUNT = 10;
 	
@@ -24,8 +28,10 @@ public abstract class Strategy {
 		this.hitEnemyShips = new HashMap<ID, ArrayList<ID>>();
 		this.noHitEnemyShips = new HashMap<ID, ArrayList<ID>>();
 		this.enemiesWithShipCount = new HashMap<ID, Integer>();
+		this.startOwnInterval = null;
+		this.endOwnInterval = null;
 	}
-	
+
 	public abstract Map<ShipInterval, Boolean> shipPlacementStrategy();
 	
 	public abstract ID chooseTargetStrategy();
@@ -111,10 +117,26 @@ public abstract class Strategy {
 		return this.enemiesWithShipCount.put(source, count);
 	}
 
-	public void setownShipIntervals(List<ShipInterval> ownShipIntervals){
+	public void setOwnShipIntervals(List<ShipInterval> ownShipIntervals) {
 		this.ownShipIntervals = ownShipIntervals;
 	}
 	
+	public ID getStartOwnInterval() {
+		return startOwnInterval;
+	}
+
+	public void setStartOwnInterval(ID startOwnInterval) {
+		this.startOwnInterval = startOwnInterval;
+	}
+
+	public ID getEndOwnInterval() {
+		return endOwnInterval;
+	}
+
+	public void setEndOwnInterval(ID endOwnInterval) {
+		this.endOwnInterval = endOwnInterval;
+	}
+
 	public int getIntervalSize() {
 		return Strategy.INTERVALSIZE;
 	}

@@ -133,8 +133,16 @@ public class BattlePlan implements NotifyCallback{
 		List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
 				this.impl.getPredecessorID(), this.impl.getID());
 		
-		this.strategy.setownShipIntervals(ownShipIntervals);
+		this.strategy.setOwnShipIntervals(ownShipIntervals);
 		this.shipPositions = this.strategy.shipPlacementStrategy();
+		
+		ID predecID= this.impl.getPredecessorID();
+		ID startOwnInterval = new ID(predecID.toBigInteger().add(new BigInteger("1")).toByteArray());
+		this.strategy.setStartOwnInterval(startOwnInterval);
+		this.strategy.setEndOwnInterval(this.impl.getID());
+		System.out.println("start: " + startOwnInterval.toDecimalString());
+		System.out.println("end: " + this.impl.getID().toDecimalString());
+		System.out.println("target: " + this.chooseTarget());
 		
 		/**
 		 * Dustin: Sind wir nicht der erste Spieler, wenn die ID unsers nächsten Successors

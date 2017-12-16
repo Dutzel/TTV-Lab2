@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 
 import app.BattlePlan;
 import app.StrategyOne;
+import app.StrategyTest;
 import de.uniba.wiai.lspi.chord.com.Broadcast;
 import de.uniba.wiai.lspi.chord.com.CommunicationException;
 import de.uniba.wiai.lspi.chord.com.Entry;
@@ -415,7 +416,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		//create BattlePlan instance for communication
 		
 		//TODO: announce the interface
-		this.battlePlan = new BattlePlan(this, "localhost:5683", new StrategyOne());
+		this.battlePlan = new BattlePlan(this, "localhost:5683", new StrategyTest());
 		this.setCallback(this.battlePlan);
 		
 		// create NodeImpl instance for communication
