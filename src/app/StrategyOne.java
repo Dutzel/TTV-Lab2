@@ -15,12 +15,9 @@ import de.uniba.wiai.lspi.chord.service.impl.ShipInterval;
 import de.uniba.wiai.lspi.util.logging.Logger;
 
 public class StrategyOne extends Strategy {
-
-	private Logger logger;
+	
 	public StrategyOne(ChordImpl impl) {
 		super(impl);
-		this.logger = Logger.getLogger(StrategyOne.class.getName());
-		this.logDebug("Logger initialized.");
 	}
 
 	/**
@@ -39,8 +36,9 @@ public class StrategyOne extends Strategy {
 		List<Integer> usedPositions = new ArrayList<>();
 		Map<ShipInterval, Boolean> shipPositions = new HashMap<ShipInterval, Boolean>();;
 
-		this.divideShipIntervals(this.impl.getPredecessorID(), this.impl.getID());
-		this.setOwnShipIntervals(this.divideShipIntervals(this.impl.getPredecessorID(), this.impl.getID()));
+		// wird bereits im battleplan gemacht
+//		this.divideShipIntervals(this.impl.getPredecessorID(), this.impl.getID());
+//		this.setOwnShipIntervals(this.divideShipIntervals(this.impl.getPredecessorID(), this.impl.getID()));
 		for (int i = 0; i < this.getShipCount(); i++) {
 			int shipPos =  new Random().nextInt(this.getOwnShipIntervals().size());
 			while(true){
@@ -60,43 +58,37 @@ public class StrategyOne extends Strategy {
 	 * Implementation wie in der Git-Readme beschrieben.
 	 */
 	@Override
-	public ID chooseTargetStrategy() {
+	public ID chooseTargetStrategy(boolean firstNode, boolean predecMaxNode) {
 		// private Map<ID, ArrayList<ID>> hitEnemyShips;
 		// private Map<ID, ArrayList<ID>> noHitEnemyShips;
 
-		ID target = null;
-		int numberOfHits = 0;
-		if( this.getHitEnemyShips().size() != 0){
-			for(Map.Entry<ID, ArrayList<ID>> entry : this.getHitEnemyShips().entrySet()) {
-				  ID enemyShip = entry.getKey();
-				  if(this.getEnemyShipCount(enemyShip) > numberOfHits){
-					  numberOfHits = this.getEnemyShipCount(enemyShip);
-					  target = enemyShip;
-				  }
-			}
-			return calculateShootToUntouchedField(target);
-		}
-		if( this.getNoHitEnemyShips().size() != 0){
-			for(Map.Entry<ID, ArrayList<ID>> entry : this.getNoHitEnemyShips().entrySet()) {
-				  ID enemyShip = entry.getKey();
-				  ArrayList<ID> value = entry.getValue();
-				  
-				  if(value.size() > numberOfHits){
-					  numberOfHits = value.size();
-					  target = enemyShip;
-				  }
-			}
-			return calculateShootToUntouchedField(target);
-		}
-		/**
-		 * Wenn keine der vorherigen Bedingungen zutrifft, schießen wir zufällig auf das erste Feld nach einem Feind in unserer
-		 * Fingertabelle.
-		 * 
-		 *  TODO: Besteht hier noch die Chance, dass wir auf uns selber schießen, wenn die Fingertabelle zu klein ist?
-		 */
+//		ID target = null;
+//		int numberOfHits = 0;
+//		if( this.getHitEnemyShips().size() != 0){
+//			for(Map.Entry<ID, ArrayList<ID>> entry : this.getHitEnemyShips().entrySet()) {
+//				  ID enemyShip = entry.getKey();
+//				  if(this.getEnemyShipCount(enemyShip) > numberOfHits){
+//					  numberOfHits = this.getEnemyShipCount(enemyShip);
+//					  target = enemyShip;
+//				  }
+//			}
+//			return calculateShootToUntouchedField(target);
+//		}
+//		if( this.getNoHitEnemyShips().size() != 0){
+//			for(Map.Entry<ID, ArrayList<ID>> entry : this.getNoHitEnemyShips().entrySet()) {
+//				  ID enemyShip = entry.getKey();
+//				  ArrayList<ID> value = entry.getValue();
+//				  
+//				  if(value.size() > numberOfHits){
+//					  numberOfHits = value.size();
+//					  target = enemyShip;
+//				  }
+//			}
+//			return calculateShootToUntouchedField(target);
+//		}
 		//int targetPos =  new Random().nextInt(this.impl.getSortedFingerTable().size());
 		//target =  ID.valueOf(this.impl.getSortedFingerTable().get(targetPos).getNodeID().toBigInteger().add(new BigInteger("1")));
-		return this.chooseRandomTarget();
+		return this.chooseRandomTarget(firstNode, predecMaxNode);
 	}
     
 	/**
@@ -123,7 +115,8 @@ public class StrategyOne extends Strategy {
 	private ID calculateShootToUntouchedField(ID enemyTarget){	
 		
 		ID shotPos = ID.valueOf(enemyTarget.toBigInteger().subtract(new BigInteger("1")));
-		
+		this.logDebug("this is shotpos: " + shotPos);
+		this.logDebug("enemytarg: " + enemyTarget);
 		while(this.getCompleteHitInfoEnemyShips().get(enemyTarget).contains(shotPos)){
 			shotPos = ID.valueOf(shotPos.toBigInteger().subtract(new BigInteger("1")));
 		}
@@ -131,18 +124,27 @@ public class StrategyOne extends Strategy {
 		return shotPos;
 	}
 	
-	private ID chooseRandomTarget() {
+	/**
+	 * Generates a random ID. If the node is the first node in the ring,
+	 * and the last node is not the maximum nodeID, it checks the 
+	 */
+	private ID chooseRandomTarget(boolean firstNode, boolean predecMaxNode) {
 		BigInteger rnd;
 		ID target;
+		boolean equal = true;
+		boolean intervalCheck = true;
 		do {
 			rnd = this.generateRandomBigInt();
 			target = ID.valueOf(rnd);
-			//TODO: abfrage stimmt noch nicht: sonderfall von startknoten behandeln, da der start des 
-			//intervalls der letzte knoten im ring ist und daher vor null liegt -> schießt auf sich selbst.
-			System.out.println("eq and gr: " + (target.compareTo(this.getStartOwnInterval()) > -1));
-			System.out.println("eq and le: " + (target.compareTo(this.getEndOwnInterval()) < 1));
-		} while ((target.compareTo(this.getStartOwnInterval()) > -1) &&
-				(target.compareTo(this.getEndOwnInterval()) < 1));
+			equal = target.compareTo(this.getStartOwnInterval()) == 0 || 
+					target.compareTo(this.getEndOwnInterval()) == 0;
+			if(firstNode && !predecMaxNode){
+				intervalCheck = target.isInInterval(this.getStartOwnInterval(), this.getMaxNodeID()) || 
+						target.isInInterval(ID.valueOf(new BigInteger("0")), this.getEndOwnInterval());
+			}else{
+				intervalCheck = target.isInInterval(this.getStartOwnInterval(), this.getEndOwnInterval());
+			}
+		} while (intervalCheck || equal);
 		return target;
 	}
 	
@@ -152,11 +154,5 @@ public class StrategyOne extends Strategy {
 			return this.generateRandomBigInt();
 		}
 		return rnd;
-	}
-	
-	private void logDebug(String text){
-		if (this.logger.isEnabledFor(DEBUG)) {
-			this.logger.debug(this.impl.getID() + ": " + text);
-		}
 	}
 }

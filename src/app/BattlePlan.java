@@ -25,10 +25,10 @@ import de.uniba.wiai.lspi.util.logging.Logger;
 public class BattlePlan implements NotifyCallback{
 
 	public ChordImpl impl;
-	private BigInteger maxNodekey;
+	private ID maxNodeID;
 	private Map<ShipInterval, Boolean> shipPositions;
 	private CoAPConnectionLED cCon;
-	private Logger logger;
+	private static final Logger logger = Logger.getLogger(BattlePlan.class.getName());;
 	
 	/**
 	 * Our strategy of ship placements and choosing a target.
@@ -38,14 +38,32 @@ public class BattlePlan implements NotifyCallback{
 	/**
 	 * We need to know if we shot the last received broadcast package.
 	 */
-	private ID lastShotTarget = null;
+	private ID lastShotTarget;
+	
+	/**
+	 * Remember if we are the first node in the network.
+	 */
+	private boolean firstNode;
+	
+	/**
+	 * Remember if our predecessor has the max NodeID.
+	 */
+	private boolean predecMaxNode;
+	
+	/**
+	 * Save our own NodeID.
+	 */
+	private ID nodeID;
 
 	public BattlePlan(ChordImpl impl, String coapUri, Strategy strategy) {
-		this.logger = Logger.getLogger(BattlePlan.class.getName());
 		this.impl = impl;
 		this.logDebug("Logger initialized.");
 		this.shipPositions = new HashMap<ShipInterval, Boolean>();
-		calcMaxNodekey();
+		this.lastShotTarget = null;
+		this.firstNode = false;
+		this.predecMaxNode = true;
+		this.nodeID = this.impl.getID();
+		calcMaxNodeID();
 		
 		// init coap interface and set led status to green
 		// TODO: einkommentieren!!
@@ -136,21 +154,40 @@ public class BattlePlan implements NotifyCallback{
 
 	public void loadGrid() throws InterruptedException{
 		debugText();
+
+		ID predecID= this.impl.getPredecessorID();
+		
+		ID startOwnInterval = ID.valueOf(predecID.toBigInteger().add(new BigInteger("1")));
+		this.strategy.setStartOwnInterval(startOwnInterval);
+		this.strategy.setEndOwnInterval(this.nodeID);
+		this.strategy.setMaxNodeID(this.maxNodeID);
+		
+		if(predecID.compareTo(this.nodeID) == 1 && !predecID.equals(this.maxNodeID)){
+			this.firstNode = true;
+			this.predecMaxNode = false;
+			this.logDebug("I am the first node in network and my predecessor has NOT the max NodeID");
+		}else if(predecID.compareTo(this.nodeID) == 1){
+			this.firstNode = true;
+			this.logDebug("I am the first node in network and my predecessor has the max NodeID");
+		}
 	
 		List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
-				this.impl.getPredecessorID(), this.impl.getID());
-		
+				predecID, this.nodeID, this.firstNode, this.predecMaxNode);
+		this.logDebug("devides: " + ownShipIntervals);
 		this.strategy.setOwnShipIntervals(ownShipIntervals);
 		
 		this.shipPositions = this.strategy.shipPlacementStrategy();
-		
-		ID predecID= this.impl.getPredecessorID();
-		ID startOwnInterval = ID.valueOf(predecID.toBigInteger().add(new BigInteger("1")));
-		this.strategy.setStartOwnInterval(startOwnInterval);
-		this.strategy.setEndOwnInterval(this.impl.getID());
 
-		if(!(this.impl.getPredecessorID().equals(ID.valueOf(this.maxNodekey))) &&
-				(this.impl.getID().toBigInteger().compareTo(this.impl.getPredecessorID().toBigInteger()) == -1)){
+		// we are the node with the first ID on ring and able to start shooting:
+		// if the predeccorsID is not the maximum NodeId which is possible and
+		// if the predecessorID is greater than ours.
+		boolean firstNodeOnRing = (!(predecID.equals(this.maxNodeID)) &&
+				(predecID.compareTo(this.nodeID) == 1));
+		
+		// we are the node with the max ID on the ring and able to start shooting.
+		boolean lastNodeAndMaxID = (this.nodeID.equals(this.maxNodeID));
+		
+		if(firstNodeOnRing || lastNodeAndMaxID){
 			this.logDebug("I am the very first player allowed to shoot!");
 			Thread.sleep(2000);
 			this.shoot();
@@ -166,7 +203,7 @@ public class BattlePlan implements NotifyCallback{
 	private ID chooseTarget(){
 		//TODO: Calculate a logical good next target
 		// Hint: We need to make sure, we don't hit the other nodes. We want to hit their ships.
-		return this.strategy.chooseTargetStrategy();
+		return this.strategy.chooseTargetStrategy(this.firstNode, this.predecMaxNode);
 	}
 
 	/**
@@ -184,10 +221,11 @@ public class BattlePlan implements NotifyCallback{
 	/**
 	 * This method calculates the max value of a nodekey with respect of the definition of our task
 	 */
-	private void calcMaxNodekey(){
-		maxNodekey = new BigInteger("2");
-		maxNodekey = maxNodekey.pow(160);
-		maxNodekey = maxNodekey.subtract(new BigInteger("1"));
+	private void calcMaxNodeID(){
+		BigInteger maxNodeKey = new BigInteger("2");
+		maxNodeKey = maxNodeKey.pow(160);
+		maxNodeKey = maxNodeKey.subtract(new BigInteger("1"));
+		this.maxNodeID = ID.valueOf(maxNodeKey);
 	}
 	
 	/**
@@ -239,15 +277,15 @@ public class BattlePlan implements NotifyCallback{
 	}
 	
 	private void logDebug(String text){
-		if (this.logger.isEnabledFor(DEBUG)) {
-			this.logger.debug(this.impl.getID() + ": " + text);
+		if (logger.isEnabledFor(DEBUG)) {
+			logger.debug(this.nodeID + ": " + text);
 		}
 	}
 	
 	private void debugText(){
 		this.logDebug("Loading "+ impl.getURL() + "'s grid for ID: "); 
 		this.logDebug(impl.getID().toBigInteger() + " length: " + impl.getID().toBigInteger().toString().length() );
-		this.logDebug("of max:\n" + maxNodekey);
+		this.logDebug("of max:\n" + this.maxNodeID);
 		this.logDebug(this.impl.printFingerTable());
-	}
+	}	
 }

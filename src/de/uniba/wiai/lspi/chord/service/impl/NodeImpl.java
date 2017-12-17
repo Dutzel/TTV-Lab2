@@ -456,8 +456,8 @@ public final class NodeImpl extends Node {
 			if (this.logger.isEnabledFor(DEBUG)) {
 			this.logger.debug("Retrieved broadcast: send single broadcast: " + info.toString() + " to nextNode: " + nextNode.getNodeID());
 		}
-			this.execBroadcast(nextNode, info);
-			//nextNode.broadcast(info);
+			//this.execBroadcast(nextNode, info);
+			nextNode.broadcast(info);
 			return;
 		}
 		counter += 1;
@@ -473,10 +473,8 @@ public final class NodeImpl extends Node {
 		if (this.logger.isEnabledFor(DEBUG)) {
 			this.logger.debug("Inform/Retrieved broadcast: send broadcast: " + newInfo + " to nextNode: " + nextNode.getNodeID());
 		}
-		this.execBroadcast(nextNode, newInfo);
-		//nextNode.broadcast(newInfo);
-		
-		//this.sendBroadcast(fingerTable, last, counter + 1, lastPos, info);
+		//this.execBroadcast(nextNode, newInfo);
+		nextNode.broadcast(newInfo);
 	}
 	
 	private void execBroadcast(Node nextNode, Broadcast info){
