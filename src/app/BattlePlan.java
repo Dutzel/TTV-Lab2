@@ -139,9 +139,11 @@ public class BattlePlan implements NotifyCallback{
 			 * dass ein Schuss auf sie erfolgreich stattfand?
 			 * --> Das Senden eines Broadcasts muss parallel (asynchron) zum übrigen Programmablauf erfolgen!
 			 */
-			if(this.lastShotTarget.equals(target)){
+			if(this.lastShotTarget != null && this.lastShotTarget.equals(target)){
 					if(count == 10){
 						//we win the game, but what to do now?
+						this.logDebug("*************************************WE WON THE GAME*************************************\n"
+								+ "We killed: " + source);
 					}
 			}
 		}
@@ -173,7 +175,6 @@ public class BattlePlan implements NotifyCallback{
 	
 		List<ShipInterval> ownShipIntervals = this.strategy.divideShipIntervals(
 				predecID, this.nodeID, this.firstNode, this.predecMaxNode);
-		this.logDebug("devides: " + ownShipIntervals);
 		this.strategy.setOwnShipIntervals(ownShipIntervals);
 		
 		this.shipPositions = this.strategy.shipPlacementStrategy();
@@ -215,7 +216,7 @@ public class BattlePlan implements NotifyCallback{
 		ID target = this.chooseTarget();
 		this.lastShotTarget = target;
 		this.logDebug("I am shooting on target: " + target);
-		//this.impl.retrieve(target);
+		this.impl.retrieve(target);
 	}
 
 	/**
@@ -236,20 +237,22 @@ public class BattlePlan implements NotifyCallback{
 	 */
 	private boolean checkShipPlacement(ID target){
 		boolean position = false;
-		ShipInterval removeShip = null;
+		ShipInterval ship = null;
 		for(Map.Entry<ShipInterval, Boolean> entry : this.shipPositions.entrySet()) {
 			// from the doc: "Neither of the boundary IDs is included in the interval."
 			// we need to check if target is equal the boundary IDs of interval
 			if(target.equals(entry.getKey().getFrom()) ||
 					target.isInInterval(entry.getKey().getFrom(), entry.getKey().getTo()) ||
 					target.equals(entry.getKey().getTo())){
-				position = entry.getValue();
-				removeShip = entry.getKey();
+				position = true;
+				ship = entry.getKey();
 				break;
 			}
 		}
+		this.shipPositions.replace(ship, position);
 		//TODO: maybe save the removed value?
-		this.shipPositions.remove(removeShip);
+		//dürfen wir nicht löschen..brauchen wir noch für coap..
+		//this.shipPositions.remove(removeShip);
 		return position;
 	}
 	
@@ -273,7 +276,9 @@ public class BattlePlan implements NotifyCallback{
 		else{
 			color = "r";
 		}
-		this.cCon.setColor(color);
+		this.logDebug("percentage: " + per);
+		this.logDebug("set color to: " + color);
+		//this.cCon.setColor(color);
 	}
 	
 	private void logDebug(String text){
