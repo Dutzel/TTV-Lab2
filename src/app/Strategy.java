@@ -22,6 +22,7 @@ public abstract class Strategy {
 	private Map<ID, ArrayList<ID>> completeHitInfoEnemyShips;
 	private Map<ID, Integer> enemiesWithShipCount;
 	private List<ShipInterval> ownShipIntervals;
+	private int ourDrownShipsCount;
 	private ID startOwnInterval;
 	private ID endOwnInterval;
 	private ID maxNodeID;
@@ -42,6 +43,7 @@ public abstract class Strategy {
 		this.startOwnInterval = null;
 		this.endOwnInterval = null;
 		this.maxNodeID = null;
+		this.setOurDrownShipsCount(0);
 	}
 
 	public abstract Map<ShipInterval, Boolean> shipPlacementStrategy();
@@ -245,5 +247,16 @@ public abstract class Strategy {
 		if (logger.isEnabledFor(DEBUG)) {
 			logger.debug(this.impl.getID() + ": " + text);
 		}
+	}
+	/**
+	 * Use this return value to calculate the percentage of our left ships for coap lights.
+	 * @return amount of our drown ships
+	 */
+	public int getOurDrownShipsCount() {
+		return ourDrownShipsCount;
+	}
+
+	public void setOurDrownShipsCount(int ourDrownShipsCount) {
+		this.ourDrownShipsCount = ourDrownShipsCount;
 	}
 }

@@ -56,6 +56,7 @@ public class StrategyOne extends Strategy {
 
 	/**
 	 * Implementation wie in der Git-Readme beschrieben.
+	 * Dustin (29.12.2017): Ich finde es leider schwierig hier noch einen Fehler zu finden...
 	 */
 	@Override
 	public ID chooseTargetStrategy(boolean firstNode, boolean predecMaxNode) {

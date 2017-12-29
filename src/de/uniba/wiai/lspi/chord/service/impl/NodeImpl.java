@@ -31,6 +31,7 @@ import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.INFO;
 
 import java.io.Console;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -98,6 +99,8 @@ public final class NodeImpl extends Node {
 	private Executor asyncExecutor;
 	
 	private Lock notifyLock; 
+	
+	private List<Integer> alreadyForwardedTransactionIDs = new ArrayList<Integer>();
 
 	/**
 	 * Creates that part of the local node which answers remote requests by
@@ -510,19 +513,37 @@ public final class NodeImpl extends Node {
 //			this.logger.debug(" Send broadcast message: " + info.toString());
 //		}
 		
-		List<Node> sortedFingerTable = this.impl.getSortedFingerTable();
-
-		// 2. case: broadcast comes from another node
-		if(!this.getNodeID().equals(info.getSource())){
-			// inform application
-			if (this.notifyCallback != null) {
-				if (this.logger.isEnabledFor(DEBUG)) {
-					this.logger.debug("Inform my application about the broadcast from another node: " + info.toString());
+		/**
+		 * GIT Issue: #10
+		 * Here we check, if a received transaction id was already forwarded.
+		 * If a transaction id was already forwarded, we discard the broadcast.
+		 * Status: done
+		 */
+		if(!alreadyForwardedTransactionIDs.contains(info.getTransaction())){
+			synchronized (alreadyForwardedTransactionIDs) {
+				alreadyForwardedTransactionIDs.add(info.getTransaction());
+			}
+			
+			
+			List<Node> sortedFingerTable = this.impl.getSortedFingerTable();
+	
+			// 2. case: broadcast comes from another node
+			if(!this.getNodeID().equals(info.getSource())){
+				// inform application
+				if (this.notifyCallback != null) {
+					if (this.logger.isEnabledFor(DEBUG)) {
+						this.logger.debug("Inform my application about the broadcast from another node: " + info.toString());
+					}
+					this.notifyCallback.broadcast(info.getSource(), info.getTarget(), info.getHit());
 				}
-				this.notifyCallback.broadcast(info.getSource(), info.getTarget(), info.getHit());
-				}
+			}
+			this.sendBroadcast(sortedFingerTable, 0, info);
+		}else{
+			if (this.logger.isEnabledFor(DEBUG)) {
+				//System.err.println("Ignored transaction " + info.getTransaction() + ", because it was already forwarded.");
+				//this.logger.debug("Ignored transaction " + info.getTransaction() + ", because it was already forwarded.");
+			}
 		}
-		this.sendBroadcast(sortedFingerTable, 0, info);
 		
 		// Terminierung erfolgt durch  Range +1
 		// also muss ich alle finger in einer reihenfolge durchgehen und dem nächsten node

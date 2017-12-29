@@ -26,7 +26,7 @@ public class LocalTestingMain{
 			
 			PropertiesLoader.loadPropertyFile();
 			
-			int amountTestPlayers = 4;
+			int amountTestPlayers = 3;
 			
 			List<TestThread> players = LocalTestingMain.loadTestMocks(amountTestPlayers);
 	

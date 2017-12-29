@@ -3,6 +3,7 @@ package app;
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,9 @@ public class BattlePlan implements NotifyCallback{
 	private ID maxNodeID;
 	private Map<ShipInterval, Boolean> shipPositions;
 	private CoAPConnectionLED cCon;
-	private static final Logger logger = Logger.getLogger(BattlePlan.class.getName());;
+	private static final Logger logger = Logger.getLogger(BattlePlan.class.getName());
+	private ID targetWeKilled;
+	private List<ID> shotTargets;
 	
 	/**
 	 * Our strategy of ship placements and choosing a target.
@@ -59,9 +62,11 @@ public class BattlePlan implements NotifyCallback{
 		this.impl = impl;
 		this.logDebug("Logger initialized.");
 		this.shipPositions = new HashMap<ShipInterval, Boolean>();
+		this.shotTargets = new ArrayList<>();
 		this.lastShotTarget = null;
 		this.firstNode = false;
 		this.predecMaxNode = true;
+		this.targetWeKilled = impl.getID(); // targetWeKilled is not allowed to be null. instead we can use our own id, because we will not receive a broadcast from ourself.
 		this.nodeID = this.impl.getID();
 		calcMaxNodeID();
 		
@@ -75,20 +80,8 @@ public class BattlePlan implements NotifyCallback{
 
 	@Override
 	public void retrieved(ID target) {
-		/**
-		 * TODO: Bis hierhin funktioniert es schonmal. Die Spieler beschießen sich und der auskommentierte
-		 * Ausdruck wird in der Console gespammt bis zum Buffer overflow.
-		 * 
-		 * Allerdigs scheint noch ein Fehler im Broadcast der NodeImpl vorzuliegen.
-		 * Transaktionsid prüfen?
-		 * 
-		 */
-		//System.err.println("##### (" + this.impl.getID() + ") was shot!");
-		
-		/** First we need to check if we are in range of the shot.
-		 * If we are in range we should setup our ships position as mentioned below.
-		 * This can only happen once and right after receiving the first shot in our range.
-		 */
+		// System.err.println("##### (" + this.impl.getID() + ") was shot!");
+
 		// comments from fabian:
 		// called in NodeImpl.retrieveEntries(). and this one was called from ChordImpl.retrieve()
 		// TODO:
@@ -120,31 +113,32 @@ public class BattlePlan implements NotifyCallback{
 		// 				true:  - register target and hit
 		//							 - check if all ships are dropped
 		//				false: - register target and hit
-		//		set this.lastShotTarget = null; because if we were shot, then we will shoot, so we know if the last broadcast was ours
 		if(hit){
-			// Once an enemy got hit, we need to update his information.
+			// Once an enemy got hit, we need to update his information.			
 			this.strategy.addHitTarget(source, target);
+			
 			Integer count = this.strategy.getEnemyShipCount(source);
 			if(count == null){
 				count = 0;
 			}
-			count += 1;
-			this.strategy.putEnemyShipCount(source, count);
+			this.strategy.putEnemyShipCount(source, ++count);
 			// we shot this enemy
-			/**
-			 * // Dustin: Zur Prüfung ob der Broadcast von uns selbst kommt.. 
-			 * Ich bin mir nicht sicher ob das so funktioniert, 
-			 * was ist wenn andere erst Schießen, 
-			 * nachdem sie getroffen wurden, und dann Broadcasten, 
-			 * dass ein Schuss auf sie erfolgreich stattfand?
-			 * --> Das Senden eines Broadcasts muss parallel (asynchron) zum übrigen Programmablauf erfolgen!
-			 */
-			if(this.lastShotTarget != null && this.lastShotTarget.equals(target)){
+			if(shotTargets.contains(target)){
+			//if(this.lastShotTarget != null && this.lastShotTarget.equals(target)){
 					if(count == 10){
 						//we win the game, but what to do now?
-						this.logDebug("*************************************WE WON THE GAME*************************************\n"
-								+ "We killed: " + source);
+						this.logDebug("*************************WE WON THE GAME*********************************\n"
+								+ "We killed: " + source + " his shipcount: " + this.strategy.getEnemyShipCount(source));
+						targetWeKilled = source;
+						
+						debugSleep(2000);
 					}
+			}else{
+				if(count == 10 && !targetWeKilled.equals(source)){
+					this.logDebug("########## Another player won the game by killing: "+ source  +" ##########\n");
+					//System.err.println("########## Another player won the game by destroying: + "+ source  +" ##########\n");
+					debugSleep(2000);
+				}
 			}
 		}
 		else{
@@ -153,7 +147,10 @@ public class BattlePlan implements NotifyCallback{
 		}
 		this.lastShotTarget = null;
 	}
-
+	/**
+	 * This method sets up the information necessary to take part on a game.
+	 * @throws InterruptedException
+	 */
 	public void loadGrid() throws InterruptedException{
 		debugText();
 
@@ -192,7 +189,6 @@ public class BattlePlan implements NotifyCallback{
 			this.logDebug("I am the very first player allowed to shoot!");
 			Thread.sleep(2000);
 			this.shoot();
-			//this.impl.retrieve(chooseTarget());
 		}
 
 	}
@@ -202,8 +198,6 @@ public class BattlePlan implements NotifyCallback{
 	 * @return
 	 */
 	private ID chooseTarget(){
-		//TODO: Calculate a logical good next target
-		// Hint: We need to make sure, we don't hit the other nodes. We want to hit their ships.
 		return this.strategy.chooseTargetStrategy(this.firstNode, this.predecMaxNode);
 	}
 
@@ -212,10 +206,10 @@ public class BattlePlan implements NotifyCallback{
 	 * @param target
 	 */
 	private void shoot(){
-		//TODO: broadcast to target.
 		ID target = this.chooseTarget();
+		shotTargets.add(target);
 		this.lastShotTarget = target;
-		this.logDebug("I am shooting on target: " + target);
+		//this.logDebug("I am shooting on target: " + target);
 		this.impl.retrieve(target);
 	}
 
@@ -239,20 +233,36 @@ public class BattlePlan implements NotifyCallback{
 		boolean position = false;
 		ShipInterval ship = null;
 		for(Map.Entry<ShipInterval, Boolean> entry : this.shipPositions.entrySet()) {
+			
+		}
+		for(Map.Entry<ShipInterval, Boolean> entry : this.shipPositions.entrySet()) {
 			// from the doc: "Neither of the boundary IDs is included in the interval."
 			// we need to check if target is equal the boundary IDs of interval
 			if(target.equals(entry.getKey().getFrom()) ||
 					target.isInInterval(entry.getKey().getFrom(), entry.getKey().getTo()) ||
 					target.equals(entry.getKey().getTo())){
-				position = true;
+				position = true; // Ship was hit? -Yes-> True
+				if(!entry.getValue()){
+					this.strategy.setOurDrownShipsCount(this.strategy.getOurDrownShipsCount() + 1);
+				}
 				ship = entry.getKey();
 				break;
 			}
 		}
+		this.logDebug(this.impl.getID() + "his DrownShips amount: " + this.strategy.getOurDrownShipsCount());
 		this.shipPositions.replace(ship, position);
-		//TODO: maybe save the removed value?
-		//dürfen wir nicht löschen..brauchen wir noch für coap..
-		//this.shipPositions.remove(removeShip);
+		int counter = 0;
+		/**
+		 * Dustin (29.12.2017): 
+		 * Issue: #18 - Möglicherweise liegt hier der Fehler.
+		 * Wie es aussieht, bekommen wir die Benachrichtigung, dass wir oder ein anderer Spieler gewonnen hat,
+		 * obwohl noch nicht alle Schiffe des "zerstörten Spielers" kaputt sind.
+		 */
+		for(Map.Entry<ShipInterval, Boolean> entry : this.shipPositions.entrySet()) {
+			counter++;
+			this.logDebug(counter + ". " + entry.getValue());
+		}
+		//this.shipPositions.remove(ship); // If we dont remove the ships, we will find no end and getOurDrownShipsCount() shows amounts higher than 10
 		return position;
 	}
 	
@@ -262,15 +272,11 @@ public class BattlePlan implements NotifyCallback{
 	private void setSensorColor(){
 		int count = 0;
 		String color = "";
-		for(boolean shipSet : this.shipPositions.values()){
-			count += (shipSet ? 1 : 0);
-		}
-		float per = ((count * 100) / this.strategy.getShipCount());
+		float per = ((this.strategy.getOurDrownShipsCount() * 100) / this.strategy.getShipCount());
 		if(per > 0.0f && per < 50.0f){
 			color = "b";
 		}
 		else if(per >= 50.0f && per < 100.0f){
-			//TODO: does not work
 			color = "v";
 		}
 		else{
@@ -287,10 +293,19 @@ public class BattlePlan implements NotifyCallback{
 		}
 	}
 	
+	@SuppressWarnings("unused")
+	private void debugSleep(long millis){
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	private void debugText(){
-		this.logDebug("Loading "+ impl.getURL() + "'s grid for ID: "); 
-		this.logDebug(impl.getID().toBigInteger() + " length: " + impl.getID().toBigInteger().toString().length() );
-		this.logDebug("of max:\n" + this.maxNodeID);
-		this.logDebug(this.impl.printFingerTable());
+//		this.logDebug("Loading "+ impl.getURL() + "'s grid for ID: "); 
+//		this.logDebug(impl.getID().toBigInteger() + " length: " + impl.getID().toBigInteger().toString().length() );
+//		this.logDebug("of max:\n" + this.maxNodeID);
+//		this.logDebug(this.impl.printFingerTable());
 	}	
 }
