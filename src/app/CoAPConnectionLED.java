@@ -71,5 +71,5 @@ public class CoAPConnectionLED {
 	public String getColor(){
 		return new String(this.client.get().getPayload());
 	}
-	
+
 }

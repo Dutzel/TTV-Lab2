@@ -450,7 +450,7 @@ public final class NodeImpl extends Node {
 		if(nextNode.getNodeID().equals(info.getRange())){
 			// no node between us and the range	
 			if (this.logger.isEnabledFor(DEBUG)) {
-				this.logger.debug("Inform broadcast: break sending, because there is no note between us and range");
+				this.logger.debug("Inform broadcast: break sending, because there is no node between us and range");
 			}
 			return;
 		}

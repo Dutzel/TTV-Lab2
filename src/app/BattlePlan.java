@@ -2,6 +2,9 @@ package app;
 
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +24,7 @@ import de.uniba.wiai.lspi.util.logging.Logger;
  *
  * Info: We can place our ships between us and our predecessor
  *
- * @author dustinspallek
+ * @author Dustin Spallek and Fabian Reiber
  */
 public class BattlePlan implements NotifyCallback{
 
@@ -30,18 +33,21 @@ public class BattlePlan implements NotifyCallback{
 	private Map<ShipInterval, Boolean> shipPositions;
 	private CoAPConnectionLED cCon;
 	private static final Logger logger = Logger.getLogger(BattlePlan.class.getName());
+	//TODO: diese id macht für mich keinen sinn. sie wird nur gesetzt, wenn wir gewonnen haben
+	// und abgefragt wenn wir nich gewonnen haben. d.h. sie wird niemals woanders gesetzt und die
+	// abfrage !targetWeKilled.equals(source) ist immer true 
+	// erstmal auskommentiert
 	private ID targetWeKilled;
+	
+	/**
+	 * We need to know if we shot the last received broadcast package.
+	 */
 	private List<ID> shotTargets;
 	
 	/**
 	 * Our strategy of ship placements and choosing a target.
 	 */
 	private Strategy strategy;
-	
-	/**
-	 * We need to know if we shot the last received broadcast package.
-	 */
-	private ID lastShotTarget;
 	
 	/**
 	 * Remember if we are the first node in the network.
@@ -57,13 +63,14 @@ public class BattlePlan implements NotifyCallback{
 	 * Save our own NodeID.
 	 */
 	private ID nodeID;
+	
+	private BufferedReader br;
 
 	public BattlePlan(ChordImpl impl, String coapUri, Strategy strategy) {
 		this.impl = impl;
 		this.logDebug("Logger initialized.");
 		this.shipPositions = new HashMap<ShipInterval, Boolean>();
 		this.shotTargets = new ArrayList<>();
-		this.lastShotTarget = null;
 		this.firstNode = false;
 		this.predecMaxNode = true;
 		this.targetWeKilled = impl.getID(); // targetWeKilled is not allowed to be null. instead we can use our own id, because we will not receive a broadcast from ourself.
@@ -71,48 +78,32 @@ public class BattlePlan implements NotifyCallback{
 		calcMaxNodeID();
 		
 		// init coap interface and set led status to green
-		// TODO: einkommentieren!!
 		this.cCon = new CoAPConnectionLED(coapUri);
 		this.cCon.turnOn();
 		this.cCon.setGreen();
 		this.strategy = strategy;
+
+		this.br = new BufferedReader(new InputStreamReader(System.in));
 	}
 
 	@Override
 	public void retrieved(ID target) {
-		// System.err.println("##### (" + this.impl.getID() + ") was shot!");
-
-		// comments from fabian:
-		// called in NodeImpl.retrieveEntries(). and this one was called from ChordImpl.retrieve()
-		// TODO:
-		// check if a ship is in the given target interval (dont forget: a ship cant be shot twice)
-		// 		true:  ship was hit
-		//		false: no ship was hit
-		// broadcast all nodes about the result with this.chordImpl.broadcast(target, hit);
-		// our turn: call retrieve on another node which we need to choose: this.chordImpl.retrieve(target);
-		//	set this.lastShotTarget = target; to recognize later in broadcast, if we made the shot
-		
-		//check if target is in one of our intervals where we placed a ship
 		boolean hit = checkShipPlacement(target);
 		if(hit){
 			this.setSensorColor();
 		}
 		this.logDebug("Got a broadcast on target: " + target + "; the hit was: " + hit);
 		this.impl.broadcast(target, hit);
+		// if we are the player which lost all ships, we stop playing
+		if(this.strategy.getOurDrownShipsCount() == 10){
+			this.logDebug("*************************We lost the game :( *************************");
+			this.doShutdown();
+		}
 		this.shoot();
 	}
 
 	@Override
 	public void broadcast(ID source, ID target, Boolean hit) {
-		// comments from fabian
-		//method which is called from NodeImpl.broadcast, which means, that a ship from another node was shot
-		//TODO: 
-		// 		another one was shot
-		// 		check if we sent the retrieve to source, because we need to notice first if someone dropped all ships because of us
-		//		check if this.lastShotTarget == target
-		// 				true:  - register target and hit
-		//							 - check if all ships are dropped
-		//				false: - register target and hit
 		if(hit){
 			// Once an enemy got hit, we need to update his information.			
 			this.strategy.addHitTarget(source, target);
@@ -123,29 +114,22 @@ public class BattlePlan implements NotifyCallback{
 			}
 			this.strategy.putEnemyShipCount(source, ++count);
 			// we shot this enemy
-			if(shotTargets.contains(target)){
-			//if(this.lastShotTarget != null && this.lastShotTarget.equals(target)){
-					if(count == 10){
-						//we win the game, but what to do now?
-						this.logDebug("*************************WE WON THE GAME*********************************\n"
-								+ "We killed: " + source + " his shipcount: " + this.strategy.getEnemyShipCount(source));
-						targetWeKilled = source;
-						
-						debugSleep(2000);
-					}
-			}else{
-				if(count == 10 && !targetWeKilled.equals(source)){
-					this.logDebug("########## Another player won the game by killing: "+ source  +" ##########\n");
-					//System.err.println("########## Another player won the game by destroying: + "+ source  +" ##########\n");
-					debugSleep(2000);
-				}
+			if(shotTargets.contains(target) && count == 10){
+					this.logDebug("*************************WE WON THE GAME*************************\n"
+							+ "We killed: " + source + " his shipcount: " + this.strategy.getEnemyShipCount(source));
+					//targetWeKilled = source;
+					this.doShutdown();
+
+			}else if(!shotTargets.contains(target) && count == 10){
+					this.logDebug("*************************Another player won the game by killing: " +
+								source  + "*************************");
+					this.doShutdown();
 			}
 		}
 		else{
 			// Once an enemy got no hit, we need to update his information.
 			this.strategy.addNoHitTarget(source, target);
 		}
-		this.lastShotTarget = null;
 	}
 	/**
 	 * This method sets up the information necessary to take part on a game.
@@ -206,11 +190,11 @@ public class BattlePlan implements NotifyCallback{
 	 * @param target
 	 */
 	private void shoot(){
-		ID target = this.chooseTarget();
-		shotTargets.add(target);
-		this.lastShotTarget = target;
-		//this.logDebug("I am shooting on target: " + target);
-		this.impl.retrieve(target);
+		if(this.impl != null){
+			ID target = this.chooseTarget();
+			shotTargets.add(target);
+			this.impl.retrieve(target);
+		}
 	}
 
 	/**
@@ -245,6 +229,7 @@ public class BattlePlan implements NotifyCallback{
 					this.strategy.setOurDrownShipsCount(this.strategy.getOurDrownShipsCount() + 1);
 				}
 				else{
+					// TODO: remove logging..
 					this.logDebug("************just drowned ship***********************");
 				}
 				break;
@@ -283,6 +268,36 @@ public class BattlePlan implements NotifyCallback{
 		}
 		this.logDebug("set color to: " + this.cCon.getColor());
 		this.logDebug("percentage: " + per);
+	}
+	
+	private void doShutdown(){
+		String input  = "";
+		boolean reading = true;
+		try {
+			do{
+				System.out.print("Waiting for user..Type 'exit'/'resume' to leave network/resume game: ");
+				input = br.readLine();
+				this.logDebug(input);
+				switch (input) {
+				case "exit":
+					reading = false;
+					break;
+				case "resume":
+					reading = false;
+				default:
+					break;
+				}
+			}while(reading);
+			if(input.equals("exit")){
+				this.cCon.turnOff();
+				this.cCon.shutdownClient();
+				this.impl.clearCallback();
+				this.impl.leave();
+				this.impl = null;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void logDebug(String text){
