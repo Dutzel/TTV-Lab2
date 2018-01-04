@@ -31,6 +31,8 @@ import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.INFO;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,6 +45,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import app.BattlePlan;
+import app.Strategy;
 import app.StrategyOne;
 import de.uniba.wiai.lspi.chord.com.Broadcast;
 import de.uniba.wiai.lspi.chord.com.CommunicationException;
@@ -143,16 +146,6 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	private NodeImpl localNode;
 
 	/**
-	 * Implementation of our battle strategie which includes the distribution of
-	 * our ships as well as the shooting tactic.
-	 * TODO: Consider whether we need some methods within ChordImpl or not.
-	 * But lets keep it this way for now.
-	 * TODO fabian: we do not need an instance here, because we have "localCallback" at line 214
-	 * TODO dustin: we need to set the battlePlan available in our main to load the battleplans grid.
-	 */
-	private BattlePlan battlePlan;
-
-	/**
 	 * Entries stored at this node, including replicas.
 	 */
 	private Entries entries;
@@ -213,6 +206,10 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 
 	private NotifyCallback localCallback;
 
+	private String strategyName;
+	
+	private String coapServer;
+
 	/* constructor */
 
 	/**
@@ -231,6 +228,12 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 						"AsynchronousExecution"));
 		this.hashFunction = HashFunction.getHashFunction();
 		logger.info("ChordImpl initialized!");
+	}
+	
+	public ChordImpl(String strategyName, String coapServer){
+		this();
+		this.strategyName = strategyName;
+		this.coapServer = coapServer;
 	}
 
 	/**
@@ -406,20 +409,12 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 					"NUMBER_OF_SUCCESSORS intialized with wrong value! "
 							+ NUMBER_OF_SUCCESSORS);
 		}
-		this.logger.error("*****************************************");
-		this.logger.warn("******");
-		System.out.println("*******************");
-
-		//create BattlePlan instance for communication
 		
-		//TODO: announce the interface
-		this.battlePlan = new BattlePlan(this, "localhost:5683", new StrategyOne(this));
-		this.setCallback(this.battlePlan);
+		this.createStrategy();
 		
 		// create NodeImpl instance for communication
 		this.localNode = new NodeImpl(this, this.getID(), this.localURL, this.localCallback,
 				this.references, this.entries);
-
 		
 
 		// create tasks for fixing finger table, checking predecessor and
@@ -429,10 +424,6 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		// accept content requests from outside
 		this.localNode.acceptEntries();
 
-	}
-	
-	public BattlePlan getBattlePlan(){
-		return this.battlePlan;
 	}
 
 	/**
@@ -461,10 +452,6 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 				ChordImpl.CHECK_PREDECESSOR_TASK_INTERVAL, TimeUnit.SECONDS);
 	}
 
-	/**
-	 * TODO:
-	 * Dustin: sollen wir in der eigenen Main ansprechen
-	 */
 	public final void join(URL bootstrapURL) throws ServiceException {
 
 		// check if parameters are valid
@@ -580,9 +567,8 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 							+ NUMBER_OF_SUCCESSORS);
 		}
 
-		//TODO: announce the interface
-		this.battlePlan = new BattlePlan(this, "localhost:5683", new StrategyOne(this));
-		this.setCallback(this.battlePlan);
+		// announce the interface
+		createStrategy();
 		
 		// create NodeImpl instance for communication
 		this.localNode = new NodeImpl(this, this.getID(), this.localURL, this.localCallback,
@@ -1209,6 +1195,33 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		this.localCallback = null;
 		if (this.localNode != null) {
 			this.localNode.clearCallback();
+		}
+	}
+	
+	private void createStrategy(){
+		//create BattlePlan instance for communication
+		Class<?> clazz;
+		try {
+			clazz = Class.forName(this.strategyName);
+			Constructor<?> constructor = clazz.getConstructor(ChordImpl.class);
+			Strategy strategy = (Strategy) constructor.newInstance(this);
+			
+			// announce the interface
+			this.localCallback = new BattlePlan(this, this.coapServer, strategy);
+			this.setCallback(this.localCallback);
+		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | 
+				IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void loadBattlePlanGrid(){
+		try {
+			((BattlePlan)this.localCallback).loadGrid();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 

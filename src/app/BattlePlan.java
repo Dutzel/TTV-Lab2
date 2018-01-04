@@ -137,13 +137,15 @@ public class BattlePlan implements NotifyCallback{
 	 */
 	public void loadGrid() throws InterruptedException{
 		debugText();
-
-		ID predecID= this.impl.getPredecessorID();
 		
+		ID predecID= this.impl.getPredecessorID();
+		System.out.println(this.impl.printFingerTable());
 		ID startOwnInterval = ID.valueOf(predecID.toBigInteger().add(new BigInteger("1")));
 		this.strategy.setStartOwnInterval(startOwnInterval);
 		this.strategy.setEndOwnInterval(this.nodeID);
 		this.strategy.setMaxNodeID(this.maxNodeID);
+		System.out.println(startOwnInterval);
+		System.out.println(this.nodeID);
 		
 		if(predecID.compareTo(this.nodeID) == 1 && !predecID.equals(this.maxNodeID)){
 			this.firstNode = true;
@@ -171,7 +173,7 @@ public class BattlePlan implements NotifyCallback{
 		
 		if(firstNodeOnRing || lastNodeAndMaxID){
 			this.logDebug("I am the very first player allowed to shoot!");
-			Thread.sleep(2000);
+			Thread.sleep(5000);
 			this.shoot();
 		}
 

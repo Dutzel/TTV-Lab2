@@ -528,7 +528,10 @@ public final class NodeImpl extends Node {
 			}			
 			
 			List<Node> sortedFingerTable = this.impl.getSortedFingerTable();
-	
+			System.out.println(sortedFingerTable.size());
+			for (Node node : sortedFingerTable) {
+				System.out.println(node.toString());
+			}
 			// 2. case: broadcast comes from another node
 			if(!this.getNodeID().equals(info.getSource())){
 				// update transactionID

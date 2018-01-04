@@ -21,7 +21,7 @@ public class StartBattle {
 
 	public StartBattle(URL url) throws MalformedURLException{
 		this.url = url;
-		cImpl = new ChordImpl();
+		cImpl = new ChordImpl("", "");
 		br = new BufferedReader(new InputStreamReader(System.in));
 	}
 	
