@@ -100,6 +100,8 @@ public final class NodeImpl extends Node {
 	
 	private Lock notifyLock; 
 	
+	private Integer transactionID = -1;
+	
 	private List<Integer> alreadyForwardedTransactionIDs = new ArrayList<Integer>();
 
 	/**
@@ -519,16 +521,18 @@ public final class NodeImpl extends Node {
 		 * If a transaction id was already forwarded, we discard the broadcast.
 		 * Status: done
 		 */
-		if(!alreadyForwardedTransactionIDs.contains(info.getTransaction())){
+		Integer taID = info.getTransaction();
+		if(!alreadyForwardedTransactionIDs.contains(taID)){
 			synchronized (alreadyForwardedTransactionIDs) {
-				alreadyForwardedTransactionIDs.add(info.getTransaction());
-			}
-			
+				alreadyForwardedTransactionIDs.add(taID);
+			}			
 			
 			List<Node> sortedFingerTable = this.impl.getSortedFingerTable();
 	
 			// 2. case: broadcast comes from another node
 			if(!this.getNodeID().equals(info.getSource())){
+				// update transactionID
+				this.setTransactionID(taID);
 				// inform application
 				if (this.notifyCallback != null) {
 					if (this.logger.isEnabledFor(DEBUG)) {
@@ -553,6 +557,14 @@ public final class NodeImpl extends Node {
 		//Hinweis --> randfälle betrachten
 		
 
+	}
+
+	public Integer getTransactionID() {
+		return transactionID;
+	}
+
+	public void setTransactionID(Integer transactionID) {
+		this.transactionID = transactionID;
 	}
 
 }

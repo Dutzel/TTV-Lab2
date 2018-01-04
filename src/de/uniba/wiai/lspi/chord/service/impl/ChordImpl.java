@@ -168,8 +168,6 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	private ExecutorService asyncExecutor;
 
 
-	public static int myTransactionID = 0;
-
 	/**
 	 * ThreadFactory used with Executor services.
 	 *
@@ -1174,16 +1172,17 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	// Die ANwendung die wir schrieben muss NotifyCallback implementieren!
 	@Override
 	public void broadcast (ID target, Boolean hit) {
+		Integer taID = this.localNode.getTransactionID();
+		this.localNode.setTransactionID(++taID);
+		
 		Broadcast broadcast = new Broadcast(this.getID(), this.getID(),
-				target, myTransactionID, hit);
+				target, this.localNode.getTransactionID(), hit);
 		try {
 			this.localNode.broadcast(broadcast);
 		} catch (CommunicationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		ChordImpl.myTransactionID++;
 	}
 
 	public void setCallback (NotifyCallback callback) {
