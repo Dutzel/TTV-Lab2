@@ -74,7 +74,7 @@ public class BattlePlan implements NotifyCallback{
 		// TODO: einkommentieren!!
 //		this.cCon = new CoAPConnectionLED(coapUri);
 //		this.cCon.turnOn();
-//		this.cCon.setColor("g");
+//		this.cCon.setGreen();
 		this.strategy = strategy;
 	}
 
@@ -233,9 +233,6 @@ public class BattlePlan implements NotifyCallback{
 		boolean position = false;
 		ShipInterval ship = null;
 		for(Map.Entry<ShipInterval, Boolean> entry : this.shipPositions.entrySet()) {
-			
-		}
-		for(Map.Entry<ShipInterval, Boolean> entry : this.shipPositions.entrySet()) {
 			// from the doc: "Neither of the boundary IDs is included in the interval."
 			// we need to check if target is equal the boundary IDs of interval
 			if(target.equals(entry.getKey().getFrom()) ||
@@ -270,21 +267,18 @@ public class BattlePlan implements NotifyCallback{
 	 * Set the color of sensor depending on our dropped ships.
 	 */
 	private void setSensorColor(){
-		int count = 0;
-		String color = "";
 		float per = ((this.strategy.getOurDrownShipsCount() * 100) / this.strategy.getShipCount());
 		if(per > 0.0f && per < 50.0f){
-			color = "b";
+			this.cCon.setBlue();
 		}
 		else if(per >= 50.0f && per < 100.0f){
-			color = "v";
+			this.cCon.setPurple();
 		}
 		else{
-			color = "r";
+			this.cCon.setRed();
 		}
+		this.logDebug("set color to: " + this.cCon.getColor());
 		this.logDebug("percentage: " + per);
-		this.logDebug("set color to: " + color);
-		//this.cCon.setColor(color);
 	}
 	
 	private void logDebug(String text){
