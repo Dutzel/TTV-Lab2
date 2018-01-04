@@ -72,9 +72,9 @@ public class BattlePlan implements NotifyCallback{
 		
 		// init coap interface and set led status to green
 		// TODO: einkommentieren!!
-//		this.cCon = new CoAPConnectionLED(coapUri);
-//		this.cCon.turnOn();
-//		this.cCon.setGreen();
+		this.cCon = new CoAPConnectionLED(coapUri);
+		this.cCon.turnOn();
+		this.cCon.setGreen();
 		this.strategy = strategy;
 	}
 
@@ -230,24 +230,28 @@ public class BattlePlan implements NotifyCallback{
 	 * @return true, if the target is in interval; otherwise false.
 	 */
 	private boolean checkShipPlacement(ID target){
-		boolean position = false;
-		ShipInterval ship = null;
+		boolean hit = false;
 		for(Map.Entry<ShipInterval, Boolean> entry : this.shipPositions.entrySet()) {
 			// from the doc: "Neither of the boundary IDs is included in the interval."
 			// we need to check if target is equal the boundary IDs of interval
 			if(target.equals(entry.getKey().getFrom()) ||
 					target.isInInterval(entry.getKey().getFrom(), entry.getKey().getTo()) ||
 					target.equals(entry.getKey().getTo())){
-				position = true; // Ship was hit? -Yes-> True
+				// Ship was hit? -Yes-> True , 
+				// but only set, if ship is not yet marked as drowned
 				if(!entry.getValue()){
+					hit = true;
+					this.shipPositions.replace(entry.getKey(), hit);
 					this.strategy.setOurDrownShipsCount(this.strategy.getOurDrownShipsCount() + 1);
 				}
-				ship = entry.getKey();
+				else{
+					this.logDebug("************just drowned ship***********************");
+				}
 				break;
 			}
 		}
 		this.logDebug(this.impl.getID() + "his DrownShips amount: " + this.strategy.getOurDrownShipsCount());
-		this.shipPositions.replace(ship, position);
+		
 		int counter = 0;
 		/**
 		 * Dustin (29.12.2017): 
@@ -257,10 +261,10 @@ public class BattlePlan implements NotifyCallback{
 		 */
 		for(Map.Entry<ShipInterval, Boolean> entry : this.shipPositions.entrySet()) {
 			counter++;
-			this.logDebug(counter + ". " + entry.getValue());
+			this.logDebug(counter + ". " + entry.getValue() + " " + entry.getKey());
 		}
 		//this.shipPositions.remove(ship); // If we dont remove the ships, we will find no end and getOurDrownShipsCount() shows amounts higher than 10
-		return position;
+		return hit;
 	}
 	
 	/**
