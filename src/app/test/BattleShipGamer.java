@@ -18,13 +18,13 @@ public class BattleShipGamer extends Thread {
 	private String type;
 
 	public BattleShipGamer(URL url, String strategyName, String coapServer, boolean joiner,
-			URL gameMaster, String method) throws MalformedURLException{
+			URL gameMaster, String type) throws MalformedURLException{
 		this.url = url;
 		cImpl = new ChordImpl(strategyName, coapServer);
 		br = new BufferedReader(new InputStreamReader(System.in));
 		this.joiner = joiner;
 		this.gameMaster = gameMaster;
-		this.type = method;
+		this.type = type;
 	}
 	
 	@Override
