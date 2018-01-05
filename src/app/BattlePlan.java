@@ -22,16 +22,34 @@ import de.uniba.wiai.lspi.util.logging.Logger;
 /**
  * This class represents the strategy we would like to proceed to win the battle.
  *
- * Info: We can place our ships between us and our predecessor
- *
  * @author Dustin Spallek and Fabian Reiber
  */
 public class BattlePlan implements NotifyCallback{
 
+	/**
+	 * Instance of ChordImpl.
+	 */
 	public ChordImpl impl;
+	
+	/**
+	 * Maximum ID on chord ring.
+	 */
 	private ID maxNodeID;
+	
+	/**
+	 * Defines the interval where our ships are placed. 
+	 * In Addition we save the information, if the ship is just drowned.
+	 */
 	private Map<ShipInterval, Boolean> shipPositions;
+	
+	/**
+	 * Connection to the CoAP server to trigger sensor LED.
+	 */
 	private CoAPConnectionLED cCon;
+	
+	/**
+	 * BattelPlan logger.
+	 */
 	private static final Logger logger = Logger.getLogger(BattlePlan.class.getName());
 	
 	/**
@@ -59,6 +77,9 @@ public class BattlePlan implements NotifyCallback{
 	 */
 	private ID nodeID;
 	
+	/**
+	 * Input BufferedReader for console input after game is finished.
+	 */
 	private BufferedReader br;
 
 	public BattlePlan(ChordImpl impl, String coapUri, Strategy strategy) {
@@ -128,10 +149,9 @@ public class BattlePlan implements NotifyCallback{
 	}
 	/**
 	 * This method sets up the information necessary to take part on a game.
-	 * @throws InterruptedException
+	 * @throws InterruptedException Can occur if the sleeping is interrupted.
 	 */
 	public void loadGrid() throws InterruptedException{
-		//debugText();
 		
 		ID predecID= this.impl.getPredecessorID();
 		
@@ -166,34 +186,33 @@ public class BattlePlan implements NotifyCallback{
 		
 		if(firstNodeOnRing || lastNodeAndMaxID){
 			this.logDebug("I am the very first player allowed to shoot!");
-			Thread.sleep(5000);
+			//for local test we need to wait a moment after every chord network is updated
+			Thread.sleep(2000);
 			this.shoot();
 		}
 
 	}
 
 	/**
-	 * This method implements the logic to calculate our best next target to win the battle.
-	 * @return
+	 * Returns a choose target of the given strategy.
+	 * @return ID of the target
 	 */
 	private ID chooseTarget(){
 		return this.strategy.chooseTargetStrategy(this.firstNode, this.predecMaxNode);
 	}
 
 	/**
-	 * This simple method is responsible to perform a shoot on a given target.
-	 * @param target
+	 * Perform a shoot on a target. The target with is choosed by
+	 * the strategy. After it will be retrieved asynchronously.
 	 */
 	private void shoot(){
 		if(this.impl != null){
 			ID target = this.chooseTarget();
 			shotTargets.add(target);
 			Thread t = new Thread(new Runnable() {
-				
 				@Override
 				public void run() {
 					impl.retrieve(target);
-					
 				}
 			});
 			t.start();
@@ -204,7 +223,7 @@ public class BattlePlan implements NotifyCallback{
 	}
 
 	/**
-	 * This method calculates the max value of a nodekey with respect of the definition of our task
+	 * This method calculates the max value of a nodekey with respect of the definition of our task.
 	 */
 	private void calcMaxNodeID(){
 		BigInteger maxNodeKey = new BigInteger("2");
@@ -234,27 +253,11 @@ public class BattlePlan implements NotifyCallback{
 					this.shipPositions.replace(entry.getKey(), hit);
 					this.strategy.setOurDrownShipsCount(this.strategy.getOurDrownShipsCount() + 1);
 				}
-				else{
-					// TODO: remove logging..
-					this.logDebug("************just drowned ship***********************");
-				}
 				break;
 			}
 		}
 		this.logDebug(this.impl.getID() + "his DrownShips amount: " + this.strategy.getOurDrownShipsCount());
 		
-		int counter = 0;
-		/**
-		 * Dustin (29.12.2017): 
-		 * Issue: #18 - Möglicherweise liegt hier der Fehler.
-		 * Wie es aussieht, bekommen wir die Benachrichtigung, dass wir oder ein anderer Spieler gewonnen hat,
-		 * obwohl noch nicht alle Schiffe des "zerstörten Spielers" kaputt sind.
-		 */
-		for(Map.Entry<ShipInterval, Boolean> entry : this.shipPositions.entrySet()) {
-			counter++;
-			this.logDebug(counter + ". " + entry.getValue() + " " + entry.getKey());
-		}
-		//this.shipPositions.remove(ship); // If we dont remove the ships, we will find no end and getOurDrownShipsCount() shows amounts higher than 10
 		return hit;
 	}
 	
@@ -276,6 +279,11 @@ public class BattlePlan implements NotifyCallback{
 		this.logDebug("percentage: " + per);
 	}
 	
+	/**
+	 * Handles the shutdown process. It asks for what to do:
+	 *  'exit': gracefully shutdown CoAP and chord network connection.
+	 *  'resume': resumes the game.
+	 */
 	private void doShutdown(){
 		String input  = "";
 		boolean reading = true;
@@ -305,25 +313,13 @@ public class BattlePlan implements NotifyCallback{
 		}
 	}
 	
+	/**
+	 * Logs text to debug.
+	 * @param text Text to log with the nodeID concatenated in front.
+	 */
 	private void logDebug(String text){
 		if (logger.isEnabledFor(DEBUG)) {
 			logger.debug(this.nodeID + ": " + text);
 		}
 	}
-	
-	@SuppressWarnings("unused")
-	private void debugSleep(long millis){
-		try {
-			Thread.sleep(millis);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	private void debugText(){
-//		this.logDebug("Loading "+ impl.getURL() + "'s grid for ID: "); 
-//		this.logDebug(impl.getID().toBigInteger() + " length: " + impl.getID().toBigInteger().toString().length() );
-//		this.logDebug("of max:\n" + this.maxNodeID);
-//		this.logDebug(this.impl.printFingerTable());
-	}	
 }
