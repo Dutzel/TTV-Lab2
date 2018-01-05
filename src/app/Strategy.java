@@ -17,7 +17,17 @@ import de.uniba.wiai.lspi.util.logging.Logger;
 
 public abstract class Strategy {
 
+	/**
+	 * Map that contains the informatin of successful hitted enemy ships.
+	 * ID: If of the enemy.
+	 * ArrayList<ID>: Drown ships with their position.
+	 */
 	private Map<ID, ArrayList<ID>> hitEnemyShips;
+	/**
+	 * Map that contains the informatin of unsuccessful hitted enemy area.
+	 * ID: If of the enemy.
+	 * ArrayList<ID>: unsuccessful hitted area-id.
+	 */
 	private Map<ID, ArrayList<ID>> noHitEnemyShips;
 	private Map<ID, ArrayList<ID>> completeHitInfoEnemyShips;
 	private Map<ID, Integer> enemiesWithShipCount;
