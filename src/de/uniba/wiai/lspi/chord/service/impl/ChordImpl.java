@@ -824,7 +824,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		return values;
 
 	}
-
+	
 	// added by INET
 	public final Set<Serializable> retrieve(ID id) {
 
@@ -1209,10 +1209,8 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 			// announce the interface
 			this.localCallback = new BattlePlan(this, this.coapServer, strategy);
 			this.setCallback(this.localCallback);
-			System.out.println(this.localCallback);
 		} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | 
 				IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -1221,7 +1219,6 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		try {
 			((BattlePlan)this.localCallback).loadGrid();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

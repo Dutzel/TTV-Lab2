@@ -33,11 +33,6 @@ public class BattlePlan implements NotifyCallback{
 	private Map<ShipInterval, Boolean> shipPositions;
 	private CoAPConnectionLED cCon;
 	private static final Logger logger = Logger.getLogger(BattlePlan.class.getName());
-	//TODO: diese id macht für mich keinen sinn. sie wird nur gesetzt, wenn wir gewonnen haben
-	// und abgefragt wenn wir nich gewonnen haben. d.h. sie wird niemals woanders gesetzt und die
-	// abfrage !targetWeKilled.equals(source) ist immer true 
-	// erstmal auskommentiert
-	private ID targetWeKilled;
 	
 	/**
 	 * We need to know if we shot the last received broadcast package.
@@ -73,7 +68,6 @@ public class BattlePlan implements NotifyCallback{
 		this.shotTargets = new ArrayList<>();
 		this.firstNode = false;
 		this.predecMaxNode = true;
-		this.targetWeKilled = impl.getID(); // targetWeKilled is not allowed to be null. instead we can use our own id, because we will not receive a broadcast from ourself.
 		this.nodeID = this.impl.getID();
 		calcMaxNodeID();
 		
@@ -119,7 +113,6 @@ public class BattlePlan implements NotifyCallback{
 			if(shotTargets.contains(target) && count == 10){
 					this.logDebug("*************************WE WON THE GAME*************************\n"
 							+ "We killed: " + source + " his shipcount: " + this.strategy.getEnemyShipCount(source));
-					//targetWeKilled = source;
 					this.doShutdown();
 
 			}else if(!shotTargets.contains(target) && count == 10){
@@ -138,16 +131,14 @@ public class BattlePlan implements NotifyCallback{
 	 * @throws InterruptedException
 	 */
 	public void loadGrid() throws InterruptedException{
-		debugText();
+		//debugText();
 		
 		ID predecID= this.impl.getPredecessorID();
-		System.out.println(this.impl.printFingerTable());
+		
 		ID startOwnInterval = ID.valueOf(predecID.toBigInteger().add(new BigInteger("1")));
 		this.strategy.setStartOwnInterval(startOwnInterval);
 		this.strategy.setEndOwnInterval(this.nodeID);
 		this.strategy.setMaxNodeID(this.maxNodeID);
-		System.out.println(startOwnInterval);
-		System.out.println(this.nodeID);
 		
 		if(predecID.compareTo(this.nodeID) == 1 && !predecID.equals(this.maxNodeID)){
 			this.firstNode = true;
@@ -197,7 +188,18 @@ public class BattlePlan implements NotifyCallback{
 		if(this.impl != null){
 			ID target = this.chooseTarget();
 			shotTargets.add(target);
-			this.impl.retrieve(target);
+			Thread t = new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					impl.retrieve(target);
+					
+				}
+			});
+			t.start();
+		}
+		else{
+			this.logDebug("ChordImpl is null!");
 		}
 	}
 

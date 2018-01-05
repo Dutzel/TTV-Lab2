@@ -4,7 +4,6 @@ usage(){
 	echo -e "\n*****************************usage*****************************"
 	echo -e "<test_one> <chord-url> <chord-port> <number-of-test-threads> <name-of-strategy> <coap-url:coap-port>"
 	echo -e "<contest> <chord-url> <chord-port> <own-port> <create | join> <name-of-strategy> <coap-url:coap-port>"
-	#echo -e "<contest> <chord-url> <chord-port> <create | join> <name-of-strategy> <coap-url:coap-port>"
 	echo -e "*****************************usage*****************************\n"
 	
 	echo -e "*****************************examples*****************************"
