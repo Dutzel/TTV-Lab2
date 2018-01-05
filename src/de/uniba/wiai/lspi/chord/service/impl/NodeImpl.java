@@ -30,10 +30,7 @@ package de.uniba.wiai.lspi.chord.service.impl;
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.INFO;
 
-import java.io.Console;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -100,8 +97,14 @@ public final class NodeImpl extends Node {
 	
 	private Lock notifyLock; 
 	
+	/**
+	 * Instance of transactionID.
+	 */
 	private Integer transactionID = -1;
 	
+	/**
+	 * List of collected transactionIDs.
+	 */
 	private List<Integer> alreadyForwardedTransactionIDs = new ArrayList<Integer>();
 
 	/**
@@ -434,14 +437,6 @@ public final class NodeImpl extends Node {
 					+ this.references.toString());
 		}
 	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	final Executor getAsyncExecutor() {
-		return this.asyncExecutor;
-	}
 	
 	private void sendBroadcast(List<Node> sortedFingerTable, int counter, Broadcast info) throws CommunicationException{		
 		
@@ -461,7 +456,10 @@ public final class NodeImpl extends Node {
 			if (this.logger.isEnabledFor(DEBUG)) {
 			this.logger.debug("Retrieved broadcast: send single broadcast: " + info.toString() + " to nextNode: " + nextNode.getNodeID());
 		}
+			// execute broadcast asynchronous
 			this.execBroadcast(nextNode, info);
+			
+			// execute broadcast synchronous
 			//nextNode.broadcast(info);
 			return;
 		}
@@ -478,27 +476,26 @@ public final class NodeImpl extends Node {
 		if (this.logger.isEnabledFor(DEBUG)) {
 			this.logger.debug("Inform/Retrieved broadcast: send broadcast: " + newInfo + " to nextNode: " + nextNode.getNodeID());
 		}
+		// execute broadcast asynchronous
 		this.execBroadcast(nextNode, newInfo);
+
+		// execute broadcast synchronous
 		//nextNode.broadcast(newInfo);
 	}
 	
 	private void execBroadcast(Node nextNode, Broadcast info){
 		this.asyncExecutor.execute(new Runnable() {
-			
 			@Override
 			public void run() {
 				try {
 					nextNode.broadcast(info);
 				} catch (CommunicationException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
 			}
 		});
 	}
 	
-	// TODO: implement this function in TTP
 	@Override
 	public final void broadcast(Broadcast info) throws CommunicationException {
 		/* 2 cases to differentiate:
@@ -511,15 +508,10 @@ public final class NodeImpl extends Node {
 		 * 		and we need to send a broadcast to all nodes in fingerTable 
 		 * 		which are placed between our node an the given range.
 		*/
-//		if (this.logger.isEnabledFor(DEBUG)) {
-//			this.logger.debug(" Send broadcast message: " + info.toString());
-//		}
 		
 		/**
-		 * GIT Issue: #10
-		 * Here we check, if a received transaction id was already forwarded.
+		 * Check, if a received transaction id was already forwarded.
 		 * If a transaction id was already forwarded, we discard the broadcast.
-		 * Status: done
 		 */
 		Integer taID = info.getTransaction();
 		if(!alreadyForwardedTransactionIDs.contains(taID)){
@@ -544,19 +536,9 @@ public final class NodeImpl extends Node {
 			this.sendBroadcast(sortedFingerTable, 0, info);
 		}else{
 			if (this.logger.isEnabledFor(DEBUG)) {
-				//System.err.println("Ignored transaction " + info.getTransaction() + ", because it was already forwarded.");
-				//this.logger.debug("Ignored transaction " + info.getTransaction() + ", because it was already forwarded.");
+				this.logger.debug("Ignored transaction " + info.getTransaction() + ", because it was already forwarded.");
 			}
 		}
-		
-		// Terminierung erfolgt durch  Range +1
-		// also muss ich alle finger in einer reihenfolge durchgehen und dem nächsten node
-		// dem ich ein broadcast mitteile, gebe ich als range immer nur den finger an, der nach meiner sortierten
-		// fingertabelle auf den finger folgt
-		
-		//Hinweis --> randfälle betrachten
-		
-
 	}
 
 	public Integer getTransactionID() {

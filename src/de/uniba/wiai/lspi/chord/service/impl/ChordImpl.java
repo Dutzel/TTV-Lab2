@@ -46,7 +46,6 @@ import java.util.concurrent.TimeUnit;
 
 import app.BattlePlan;
 import app.Strategy;
-import app.StrategyOne;
 import de.uniba.wiai.lspi.chord.com.Broadcast;
 import de.uniba.wiai.lspi.chord.com.CommunicationException;
 import de.uniba.wiai.lspi.chord.com.Entry;
@@ -206,8 +205,14 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 
 	private NotifyCallback localCallback;
 
+	/**
+	 * Name of strategy to determine strategy class.
+	 */
 	private String strategyName;
 	
+	/**
+	 * Address of CoAP server e.g.: localhost:5683
+	 */
 	private String coapServer;
 
 	/* constructor */
@@ -1152,10 +1157,6 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		return ChordRemoveFuture.create(this.asyncExecutor, this, key, entry);
 	}
 
-	// TODO: implement this function in TTP
-	//send broadcast to all nodes in finger table
-	//# DAS HIER WIRD VON UNSERER ANWENDUNG ANFGERUFEN; DIE ZUVPR GEPRÜFT HAT, OB WIR GETROFFEN WURDEN!
-	// Die ANwendung die wir schrieben muss NotifyCallback implementieren!
 	@Override
 	public void broadcast (ID target, Boolean hit) {
 		Integer taID = this.localNode.getTransactionID();
@@ -1166,7 +1167,6 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		try {
 			this.localNode.broadcast(broadcast);
 		} catch (CommunicationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
