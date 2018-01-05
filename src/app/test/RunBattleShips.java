@@ -15,10 +15,12 @@ import de.uniba.wiai.lspi.chord.service.PropertiesLoader;
  */
 
 public class RunBattleShips{
-	private static String LOCALURL = URL.KNOWN_PROTOCOLS.get(URL.LOCAL_PROTOCOL);
-	private static String SOCKETURL = URL.KNOWN_PROTOCOLS.get(URL.SOCKET_PROTOCOL);
+	private static String LOCALPROT = URL.KNOWN_PROTOCOLS.get(URL.LOCAL_PROTOCOL);
+	private static String SOCKETPROT = URL.KNOWN_PROTOCOLS.get(URL.SOCKET_PROTOCOL);
+	private static String IP;
 	private static int PORT;
-	private static URL GAMEMASTER;
+	private static URL BOOTSTRAPURL;
+	private static URL LOCALURL;
 	
 	public static void main(String[] args) throws MalformedURLException {		
 		try {
@@ -26,24 +28,24 @@ public class RunBattleShips{
 				System.out.println(a);
 			}
 			PropertiesLoader.loadPropertyFile();
-			LOCALURL += "://" + args[1];
-			SOCKETURL += "://" + args[1];
+			String type = args[0];
+			IP = args[1];
 			PORT = Integer.parseInt(args[2]);
 			String strategyName = args[args.length - 2];
 			String coapServer = args[args.length - 1];
 			
-			if(args[0].equals("test_one")){
-				GAMEMASTER = new URL(LOCALURL + ":" + PORT +"/" );
+			if(type.equals("test_one")){
+				BOOTSTRAPURL = new URL(LOCALPROT + "://" + IP + ":" + PORT +"/");
 				int amountTestPlayers = Integer.parseInt(args[3]);
 				
-				List<BattleShipGamer> players = RunBattleShips.loadTestMocks(amountTestPlayers, strategyName, coapServer);
+				List<BattleShipGamer> players = RunBattleShips.loadTestMocks(amountTestPlayers, strategyName, coapServer, type);
 				for (BattleShipGamer testThread : players) {
 					testThread.start();
 				}
 			}
-			else if(args[0].equals("contest")){
-				GAMEMASTER = new URL(SOCKETURL + ":" + PORT +"/" );
-				String type = args[0];
+			else if(type.equals("contest")){
+				BOOTSTRAPURL = new URL(SOCKETPROT + "://" +IP + ":" + PORT + "/");
+				
 				if(args[4].equals("create")){
 					BattleShipGamer tt = loadCreator(strategyName, coapServer, type);
 					tt.start();
@@ -56,23 +58,18 @@ public class RunBattleShips{
 					System.out.println("wrong arg: 'create' or 'join' expected!");
 				}
 			}
-//			else if(args[0].equals("contest")){
-//				GAMEMASTER = new URL(SOCKETIP + ":" + PORT +"/" );
-//				String method = args[3];
-//				
-//			}
 		}
 		catch (NumberFormatException e){
 			e.printStackTrace();
 		}
 	}
 	
-	public static List<BattleShipGamer> loadTestMocks(int amountPlayers, String strategyName, String coapServer){
+	public static List<BattleShipGamer> loadTestMocks(int amountPlayers, String strategyName, String coapServer, String type){
 		List<BattleShipGamer> players = new ArrayList<>();
 
-		players.add(loadCreator(strategyName, coapServer, ""));
+		players.add(loadCreator(strategyName, coapServer, type));
 		for (int i = 1; i < amountPlayers; i++) {
-			players.add(loadJoiner(strategyName, coapServer, PORT + i, ""));
+			players.add(loadJoiner(strategyName, coapServer, PORT + i, type));
 		}
 		return players;
 	}
@@ -80,8 +77,8 @@ public class RunBattleShips{
 	public static BattleShipGamer loadCreator(String strategyName, String coapServer, String type){
 		BattleShipGamer tt = null;
 		try {
-			tt = new BattleShipGamer(GAMEMASTER, strategyName, coapServer, false, null, type);
-			System.out.println("GameMaster " + GAMEMASTER + " added.");
+			tt = new BattleShipGamer(BOOTSTRAPURL, strategyName, coapServer, false, null, type);
+			System.out.println("GameMaster " + BOOTSTRAPURL + " added.");
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
@@ -89,12 +86,16 @@ public class RunBattleShips{
 	}
 	
 	public static BattleShipGamer loadJoiner(String strategyName, String coapServer, int port, String type){
-		URL currentUrl;
 		BattleShipGamer tt = null;
 		try {
-			currentUrl = new URL(LOCALURL + ":" + port + "/");
-			tt = new BattleShipGamer(currentUrl, strategyName, coapServer, true, GAMEMASTER, type);
-			System.out.println("PlayerUrl " + currentUrl + " added.");
+			if(type.equals("test_one")){
+				LOCALURL = new URL(LOCALPROT + "://" + IP + ":" + port + "/");
+			}
+			else if(type.equals("contest")){
+				LOCALURL = new URL(SOCKETPROT + "://" + IP + ":" + port + "/");
+			}
+			tt = new BattleShipGamer(LOCALURL, strategyName, coapServer, true, BOOTSTRAPURL, type);
+			System.out.println("PlayerUrl " + LOCALURL + " added.");
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}

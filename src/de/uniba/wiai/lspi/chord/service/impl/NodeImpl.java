@@ -461,8 +461,8 @@ public final class NodeImpl extends Node {
 			if (this.logger.isEnabledFor(DEBUG)) {
 			this.logger.debug("Retrieved broadcast: send single broadcast: " + info.toString() + " to nextNode: " + nextNode.getNodeID());
 		}
-			//this.execBroadcast(nextNode, info);
-			nextNode.broadcast(info);
+			this.execBroadcast(nextNode, info);
+			//nextNode.broadcast(info);
 			return;
 		}
 		counter += 1;
@@ -478,8 +478,8 @@ public final class NodeImpl extends Node {
 		if (this.logger.isEnabledFor(DEBUG)) {
 			this.logger.debug("Inform/Retrieved broadcast: send broadcast: " + newInfo + " to nextNode: " + nextNode.getNodeID());
 		}
-		//this.execBroadcast(nextNode, newInfo);
-		nextNode.broadcast(newInfo);
+		this.execBroadcast(nextNode, newInfo);
+		//nextNode.broadcast(newInfo);
 	}
 	
 	private void execBroadcast(Node nextNode, Broadcast info){
@@ -528,10 +528,7 @@ public final class NodeImpl extends Node {
 			}			
 			
 			List<Node> sortedFingerTable = this.impl.getSortedFingerTable();
-			System.out.println(sortedFingerTable.size());
-			for (Node node : sortedFingerTable) {
-				System.out.println(node.toString());
-			}
+
 			// 2. case: broadcast comes from another node
 			if(!this.getNodeID().equals(info.getSource())){
 				// update transactionID

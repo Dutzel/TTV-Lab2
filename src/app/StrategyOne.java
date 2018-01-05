@@ -1,9 +1,8 @@
 package app;
 
-import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,12 +11,14 @@ import java.util.Random;
 import de.uniba.wiai.lspi.chord.data.ID;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
 import de.uniba.wiai.lspi.chord.service.impl.ShipInterval;
-import de.uniba.wiai.lspi.util.logging.Logger;
 
 public class StrategyOne extends Strategy {
 	
+	private int shootcounter;
+	
 	public StrategyOne(ChordImpl impl) {
 		super(impl);
+		this.shootcounter = 1;
 	}
 
 	/**
@@ -36,9 +37,6 @@ public class StrategyOne extends Strategy {
 		List<Integer> usedPositions = new ArrayList<>();
 		Map<ShipInterval, Boolean> shipPositions = new HashMap<ShipInterval, Boolean>();;
 
-		// wird bereits im battleplan gemacht
-//		this.divideShipIntervals(this.impl.getPredecessorID(), this.impl.getID());
-//		this.setOwnShipIntervals(this.divideShipIntervals(this.impl.getPredecessorID(), this.impl.getID()));
 		for (int i = 0; i < this.getShipCount(); i++) {
 			int shipPos =  new Random().nextInt(this.getOwnShipIntervals().size());
 			while(true){
@@ -60,35 +58,60 @@ public class StrategyOne extends Strategy {
 	 */
 	@Override
 	public ID chooseTargetStrategy(boolean firstNode, boolean predecMaxNode) {
-		// private Map<ID, ArrayList<ID>> hitEnemyShips;
-		// private Map<ID, ArrayList<ID>> noHitEnemyShips;
 
-//		ID target = null;
-//		int numberOfHits = 0;
-//		if( this.getHitEnemyShips().size() != 0){
-//			for(Map.Entry<ID, ArrayList<ID>> entry : this.getHitEnemyShips().entrySet()) {
-//				  ID enemyShip = entry.getKey();
-//				  if(this.getEnemyShipCount(enemyShip) > numberOfHits){
-//					  numberOfHits = this.getEnemyShipCount(enemyShip);
-//					  target = enemyShip;
-//				  }
-//			}
-//			return calculateShootToUntouchedField(target);
-//		}
-//		if( this.getNoHitEnemyShips().size() != 0){
-//			for(Map.Entry<ID, ArrayList<ID>> entry : this.getNoHitEnemyShips().entrySet()) {
-//				  ID enemyShip = entry.getKey();
-//				  ArrayList<ID> value = entry.getValue();
-//				  
-//				  if(value.size() > numberOfHits){
-//					  numberOfHits = value.size();
-//					  target = enemyShip;
-//				  }
-//			}
-//			return calculateShootToUntouchedField(target);
-//		}
-		//int targetPos =  new Random().nextInt(this.impl.getSortedFingerTable().size());
-		//target =  ID.valueOf(this.impl.getSortedFingerTable().get(targetPos).getNodeID().toBigInteger().add(new BigInteger("1")));
+		ID targetEnemy = null;
+		int numberOfHits = 0;
+		List<ID> sortedEnemies = null;
+		Map<ID, ArrayList<ID>> enemiesSet = null;
+		if( this.getHitEnemyShips().size() != 0){
+			sortedEnemies = new ArrayList<ID>(getHitEnemyShips().keySet());
+			enemiesSet = this.getHitEnemyShips();
+		}
+		else if( this.getNoHitEnemyShips().size() != 0){
+			sortedEnemies = new ArrayList<ID>(getNoHitEnemyShips().keySet());
+			enemiesSet = this.getNoHitEnemyShips();
+		}
+		if (sortedEnemies != null && enemiesSet != null && sortedEnemies.size() > 1){
+			sortedEnemies.sort(new Comparator<ID>() {
+
+				@Override
+				public int compare(ID arg0, ID arg1) {
+					return arg0.compareTo(arg1);
+				}
+			});
+			for(Map.Entry<ID, ArrayList<ID>> entry : enemiesSet.entrySet()) {
+				  ID enemyShip = entry.getKey();
+				  ArrayList<ID> value = entry.getValue();
+				  
+				  if(value.size() > numberOfHits){
+					  numberOfHits = value.size();
+					  targetEnemy = enemyShip;
+				  }
+			}
+			int targetIndex = sortedEnemies.indexOf(targetEnemy);
+			if(targetIndex != 0){
+				ID predecTarget = sortedEnemies.get(targetIndex - 1);
+				predecTarget = ID.valueOf(predecTarget.toBigInteger().add(new BigInteger("1")));
+				BigInteger randomTarget = null;
+				ID target = null;
+				do{
+					randomTarget = new BigInteger(targetEnemy.toBigInteger().bitLength(), new Random());
+					target = ID.valueOf(randomTarget);
+				}while(randomTarget.compareTo(targetEnemy.toBigInteger()) < 0 && randomTarget.compareTo(predecTarget.toBigInteger()) >= 0
+						&& !enemiesSet.values().contains(target));
+//				do{
+//					predecTarget.toBigInteger();
+//					randomTarget = predecTarget.toBigInteger().add(new BigInteger(predecTarget.toBigInteger().bitLength(), new Random()));
+//					target = ID.valueOf(randomTarget);
+//					//randomTarget = predecTarget.toBigInteger().add(rnd.nextInt(target.toBigInteger().subtract(predecTarget.toBigInteger())));
+//					//randomTarget = null;
+//					if(!enemiesSet.values().contains(target) && target.isInInterval(predecTarget, targetEnemy)){
+//						break;
+//					}
+//				}while(true);
+				return target;
+			}
+		}
 		return this.chooseRandomTarget(firstNode, predecMaxNode);
 	}
     
@@ -115,12 +138,16 @@ public class StrategyOne extends Strategy {
 	 */
 	private ID calculateShootToUntouchedField(ID enemyTarget){	
 		
-		ID shotPos = ID.valueOf(enemyTarget.toBigInteger().subtract(new BigInteger("1")));
+		//ID shotPos = ID.valueOf(enemyTarget.toBigInteger().subtract(new BigInteger("1")));
+		BigInteger sub = new BigInteger(String.valueOf(this.shootcounter));
+		ID shotPos = ID.valueOf(enemyTarget.toBigInteger().subtract(sub));
 		this.logDebug("this is shotpos: " + shotPos);
 		this.logDebug("enemytarg: " + enemyTarget);
 		while(this.getCompleteHitInfoEnemyShips().get(enemyTarget).contains(shotPos)){
-			shotPos = ID.valueOf(shotPos.toBigInteger().subtract(new BigInteger("1")));
+			//shotPos = ID.valueOf(shotPos.toBigInteger().subtract(new BigInteger("1")));
+			shotPos = ID.valueOf(shotPos.toBigInteger().subtract(sub));
 		}
+		this.shootcounter++;
 		
 		return shotPos;
 	}
