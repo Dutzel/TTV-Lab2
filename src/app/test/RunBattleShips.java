@@ -10,6 +10,9 @@ import de.uniba.wiai.lspi.chord.service.PropertiesLoader;
 
 /**
  * Class to test the broadcast functionality. 
+ * 
+ * ConsoleOne: java -jar ttvs_coapdummyled.jar
+ * ConsoleTwo: 
  * @author Dustin Spallek and Fabian Reiber
  *
  */

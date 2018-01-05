@@ -14,11 +14,8 @@ import de.uniba.wiai.lspi.chord.service.impl.ShipInterval;
 
 public class StrategyOne extends Strategy {
 	
-	private int shootcounter;
-	
 	public StrategyOne(ChordImpl impl) {
 		super(impl);
-		this.shootcounter = 1;
 	}
 
 	/**
@@ -53,8 +50,32 @@ public class StrategyOne extends Strategy {
 	}
 
 	/**
-	 * Implementation wie in der Git-Readme beschrieben.
-	 * Dustin (29.12.2017): Ich finde es leider schwierig hier noch einen Fehler zu finden...
+	 * Wenn wir der erste Spieler sind der schießen darf, erfolgt die Auswahl des Ziels zufällig.
+	 * 
+	 * Durch die laufenden Broadcast erhalten wir Informationen über Spieler die beschossen
+	 * wurden, deren Felder, die beschossen wurde und ob dabei ein Schiff versenkt wurde.
+	 * 
+	 * Diese Information welcher Spieler wo getroffen wurde, wird in der Map<ID, ArrayList<ID>> getHitEnemyShips gespeichert.
+	 * Die ArrayList von ID innerhalb der Map beinhaltet zum einen die Information, wie oft ein Schuss auf den jeweiligen
+	 * Gegner erfolgreich war, sowie die Position des Schiffes.
+	 * 
+	 * Die Information welcher Spieler wo beschossen wurde und der Schuss daneben ging, wird in 
+	 * der Map<ID, ArrayList<ID>> getNoHitEnemyShips gespeichert.
+	 * Die ArrayList von ID innerhalb der Map beinhaltet zum einen die Information, wie oft ein Schuss auf den jeweiligen
+	 * Gegner fehlgeschlagen ist, sowie die Position auf die geschossen wurde.
+	 * 
+	 * Die genannten Informationen nutzen wir zur Bestimmung unseres Ziels.
+	 * Wenn Gegner bereits erfolgreich beschossen wurden, suchen wir den Gegner, der den größten Schaden ermlitten hat.
+	 * Wenn kein Gegner erfolgreich beschossen wurde, wählen wir den Gegner, der bisher die meisten Fehlschüsse erlitten hat.
+	 * 
+	 * Dabei erstellen wir uns eine Übersicht aller feindlichen Spieler und sortieren diese, damit wir für einen Spieler
+	 * auf dessen Predecessor schließen können.
+	 * 
+	 * Anschließend nutzen wir die Id unseres Ziels als Obergrenze und die Id seines Predecessors als Untergrenze und generieren
+	 * daraus ein beliebiges Ziel auf das wir schießen wollen. Gleichzeitig wird überprüft ob, das ermittelte Ziel bereits beschossen wurde.
+	 * Falls das Ziel bereits beschossen wurde, wird solange ein neues Ziel in dem genannten Intervall erzeugt, bis ein Ziel
+	 * gefunden wird, auf das noch nicht geschossen wurde.
+	 * 
 	 */
 	@Override
 	public ID chooseTargetStrategy(boolean firstNode, boolean predecMaxNode) {
@@ -99,16 +120,6 @@ public class StrategyOne extends Strategy {
 					target = ID.valueOf(randomTarget);
 				}while(randomTarget.compareTo(targetEnemy.toBigInteger()) < 0 && randomTarget.compareTo(predecTarget.toBigInteger()) >= 0
 						&& !enemiesSet.values().contains(target));
-//				do{
-//					predecTarget.toBigInteger();
-//					randomTarget = predecTarget.toBigInteger().add(new BigInteger(predecTarget.toBigInteger().bitLength(), new Random()));
-//					target = ID.valueOf(randomTarget);
-//					//randomTarget = predecTarget.toBigInteger().add(rnd.nextInt(target.toBigInteger().subtract(predecTarget.toBigInteger())));
-//					//randomTarget = null;
-//					if(!enemiesSet.values().contains(target) && target.isInInterval(predecTarget, targetEnemy)){
-//						break;
-//					}
-//				}while(true);
 				return target;
 			}
 		}
@@ -123,33 +134,6 @@ public class StrategyOne extends Strategy {
 		for(Map.Entry<ShipInterval, Boolean> entry : shipPositions.entrySet()) {
 			this.logDebug("Ship position: " + entry.getKey().toString());
 		}
-	}
-	/**
-	 * Diese Methode berechnet ein freies Feld eines Gegners auf das geschossen werden kann, um
-	 * möglicherweise eines seiner Schiffe zu versenden.
-	 * 
-	 * Vorgehen: Die möglichen Schüsse auf freie Stellen werden entlang des Intervalls eines Gegners berechnet.
-	 * Wurde auf ein Feld bereits geschossen, wird berechne, ob auf die nächst kleinere ID
-	 * geschossen werden kann. Solange bis ein freies Feld zu dem noch keine Info über einen Treffer oder Fehltreffer
-	 * gefunden wurde.
-	 * 
-	 * @param enemyTarget
-	 * @return ID des Feldes in das geschossen werden soll.
-	 */
-	private ID calculateShootToUntouchedField(ID enemyTarget){	
-		
-		//ID shotPos = ID.valueOf(enemyTarget.toBigInteger().subtract(new BigInteger("1")));
-		BigInteger sub = new BigInteger(String.valueOf(this.shootcounter));
-		ID shotPos = ID.valueOf(enemyTarget.toBigInteger().subtract(sub));
-		this.logDebug("this is shotpos: " + shotPos);
-		this.logDebug("enemytarg: " + enemyTarget);
-		while(this.getCompleteHitInfoEnemyShips().get(enemyTarget).contains(shotPos)){
-			//shotPos = ID.valueOf(shotPos.toBigInteger().subtract(new BigInteger("1")));
-			shotPos = ID.valueOf(shotPos.toBigInteger().subtract(sub));
-		}
-		this.shootcounter++;
-		
-		return shotPos;
 	}
 	
 	/**
