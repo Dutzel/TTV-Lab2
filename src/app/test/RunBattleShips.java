@@ -31,20 +31,19 @@ public class RunBattleShips{
 			PORT = Integer.parseInt(args[2]);
 			String strategyName = args[args.length - 2];
 			String coapServer = args[args.length - 1];
-			String type = args[0];
 			
-			if(type.equals("test_one")){
+			if(args[0].equals("test_one")){
 				GAMEMASTER = new URL(LOCALURL + ":" + PORT +"/" );
 				int amountTestPlayers = Integer.parseInt(args[3]);
 				
-				List<BattleShipGamer> players = RunBattleShips.loadTestMocks(amountTestPlayers, strategyName, coapServer, type);
+				List<BattleShipGamer> players = RunBattleShips.loadTestMocks(amountTestPlayers, strategyName, coapServer);
 				for (BattleShipGamer testThread : players) {
 					testThread.start();
 				}
 			}
-			else if(type.equals("contest")){
+			else if(args[0].equals("contest")){
 				GAMEMASTER = new URL(SOCKETURL + ":" + PORT +"/" );
-				
+				String type = args[0];
 				if(args[4].equals("create")){
 					BattleShipGamer tt = loadCreator(strategyName, coapServer, type);
 					tt.start();
@@ -68,12 +67,12 @@ public class RunBattleShips{
 		}
 	}
 	
-	public static List<BattleShipGamer> loadTestMocks(int amountPlayers, String strategyName, String coapServer, String type){
+	public static List<BattleShipGamer> loadTestMocks(int amountPlayers, String strategyName, String coapServer){
 		List<BattleShipGamer> players = new ArrayList<>();
 
-		players.add(loadCreator(strategyName, coapServer, type));
+		players.add(loadCreator(strategyName, coapServer, ""));
 		for (int i = 1; i < amountPlayers; i++) {
-			players.add(loadJoiner(strategyName, coapServer, PORT + i, type));
+			players.add(loadJoiner(strategyName, coapServer, PORT + i, ""));
 		}
 		return players;
 	}
