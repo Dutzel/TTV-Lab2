@@ -55,23 +55,23 @@ public class StrategyOne extends Strategy {
 	 * Durch die laufenden Broadcast erhalten wir Informationen über Spieler die beschossen
 	 * wurden, deren Felder, die beschossen wurde und ob dabei ein Schiff versenkt wurde.
 	 * 
-	 * Diese Information welcher Spieler wo getroffen wurde, wird in der Map<ID, ArrayList<ID>> getHitEnemyShips gespeichert.
-	 * Die ArrayList von ID innerhalb der Map beinhaltet zum einen die Information, wie oft ein Schuss auf den jeweiligen
+	 * Die Information, welcher Spieler wo getroffen wurde, wird in der Map<ID, ArrayList<ID>> getHitEnemyShips gespeichert.
+	 * Die ArrayList von IDs innerhalb der Map beinhaltet zum einen die Information, wie oft ein Schuss auf einen
 	 * Gegner erfolgreich war, sowie die Position des Schiffes.
 	 * 
-	 * Die Information welcher Spieler wo beschossen wurde und der Schuss daneben ging, wird in 
+	 * Die Information, welcher Spieler wo beschossen wurde und der Schuss daneben ging, wird in 
 	 * der Map<ID, ArrayList<ID>> getNoHitEnemyShips gespeichert.
 	 * Die ArrayList von ID innerhalb der Map beinhaltet zum einen die Information, wie oft ein Schuss auf den jeweiligen
 	 * Gegner fehlgeschlagen ist, sowie die Position auf die geschossen wurde.
 	 * 
 	 * Die genannten Informationen nutzen wir zur Bestimmung unseres Ziels.
-	 * Wenn Gegner bereits erfolgreich beschossen wurden, suchen wir den Gegner, der den größten Schaden ermlitten hat.
+	 * Wenn Gegner bereits erfolgreich beschossen wurden, suchen wir zunächst den Gegner, der den größten Schaden ermlitten hat.
 	 * Wenn kein Gegner erfolgreich beschossen wurde, wählen wir den Gegner, der bisher die meisten Fehlschüsse erlitten hat.
 	 * 
 	 * Dabei erstellen wir uns eine Übersicht aller feindlichen Spieler und sortieren diese, damit wir für einen Spieler
 	 * auf dessen Predecessor schließen können.
 	 * 
-	 * Anschließend nutzen wir die Id unseres Ziels als Obergrenze und die Id seines Predecessors als Untergrenze und generieren
+	 * Anschließend nutzen wir die Id unseres Ziels als Obergrenze und die Id seines "vermutlichen" Predecessors als Untergrenze und generieren
 	 * daraus ein beliebiges Ziel auf das wir schießen wollen. Gleichzeitig wird überprüft ob, das ermittelte Ziel bereits beschossen wurde.
 	 * Falls das Ziel bereits beschossen wurde, wird solange ein neues Ziel in dem genannten Intervall erzeugt, bis ein Ziel
 	 * gefunden wird, auf das noch nicht geschossen wurde.
