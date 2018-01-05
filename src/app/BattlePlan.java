@@ -99,7 +99,9 @@ public class BattlePlan implements NotifyCallback{
 			this.logDebug("*************************We lost the game :( *************************");
 			this.doShutdown();
 		}
-		this.shoot();
+		else{
+			this.shoot();
+		}
 	}
 
 	@Override
@@ -279,7 +281,6 @@ public class BattlePlan implements NotifyCallback{
 			do{
 				System.out.print("Waiting for user..Type 'exit'/'resume' to leave network/resume game: ");
 				input = br.readLine();
-				this.logDebug(input);
 				switch (input) {
 				case "exit":
 					reading = false;
