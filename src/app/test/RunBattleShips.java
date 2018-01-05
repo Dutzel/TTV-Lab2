@@ -10,9 +10,9 @@ import de.uniba.wiai.lspi.chord.service.PropertiesLoader;
 
 /**
  * Class to test the broadcast functionality. 
- * 
+ * Start example via console:
  * ConsoleOne: java -jar ttvs_coapdummyled.jar
- * ConsoleTwo: 
+ * ConsoleTwo: run_local_test.sh test_one localhost 10000 4 app.StrategyOne localhost:5683
  * @author Dustin Spallek and Fabian Reiber
  *
  */
