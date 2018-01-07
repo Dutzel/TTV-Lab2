@@ -24,17 +24,21 @@ Beispielstrategien zur Verteilung unserer Schiffe aus dem Spiel "Schiffe versenk
 ## How To Start
 Zum Starten eines Tests oder Spieles muss das Script "run_local_test.sh" ausgeführt werden. Die erforderlichen Parameter sowie drei Beispiele sind im unteren Codeschnippsel aufgeführt. Der Schnippsel zeigt die Anwendung des Scripts vom Root-Verzeichnis aus gesehen. Für das korrekte Starten wird zudem eine vorhandene Verbindung zu einem CoAP-Server benötigt.
 
-`*****************************usage*****************************
-./run_local_test.sh <test> <chord-url> <chord-port> <number-of-test-threads> <name-of-strategy> <coap-url:coap-port>
-./run_local_test.sh <contest> <chord-url> <chord-port> <own-port> <create | join> <name-of-strategy> <coap-url:coap-port>
-*****************************usage*****************************
+***Usage***
+`./run_local_test.sh <test> <chord-url> <chord-port> <number-of-test-threads> <name-of-strategy> <coap-url:coap-port>`
 
-*****************************examples*****************************
+`./run_local_test.sh <contest> <chord-url> <chord-port> <own-port> <create | join> <name-of-strategy> <coap-url:coap-port>`
+
+***Examples***
 Tests from the root of this project:
 (1) run 4 players (one creats a network; three join it) in one console with StrategyOne:
-      ./run_local_test.sh test localhost 10000 4 app.StrategyOne localhost:5683
+
+      `./run_local_test.sh test localhost 10000 4 app.StrategyOne localhost:5683`
+      
 (2.0) run 1 player in one console with StrategyOne which creates a network on localhost:10000 (<own-port> is ignored):
-      ./run_local_test.sh contest localhost 10000 0 create app.StrategyOne localhost:5683
+
+      `./run_local_test.sh contest localhost 10000 0 create app.StrategyOne localhost:5683`
+      
 (2.1) run 1 player in one console with StrategyOne which joins a network running on localhost:10000:
-      ./run_local_test.sh contest localhost 10000 10001 join app.StrategyOne localhost:5683
-*****************************examples*****************************`
+
+      `./run_local_test.sh contest localhost 10000 10001 join app.StrategyOne localhost:5683`
