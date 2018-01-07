@@ -35,12 +35,12 @@ Zum Starten eines Tests oder Spieles muss das Script "run_local_test.sh" ausgef√
 Tests from the root of this project:
 (1) run 4 players (one creats a network; three join it) in one console with StrategyOne:
 
-      `./run_local_test.sh test localhost 10000 4 app.StrategyOne localhost:5683`
+      ./run_local_test.sh test localhost 10000 4 app.StrategyOne localhost:5683
       
 (2.0) run 1 player in one console with StrategyOne which creates a network on localhost:10000 (<own-port> is ignored):
 
-      `./run_local_test.sh contest localhost 10000 0 create app.StrategyOne localhost:5683`
+      ./run_local_test.sh contest localhost 10000 0 create app.StrategyOne localhost:5683
       
 (2.1) run 1 player in one console with StrategyOne which joins a network running on localhost:10000:
 
-      `./run_local_test.sh contest localhost 10000 10001 join app.StrategyOne localhost:5683`
+      ./run_local_test.sh contest localhost 10000 10001 join app.StrategyOne localhost:5683
