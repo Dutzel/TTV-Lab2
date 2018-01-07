@@ -8,6 +8,7 @@ Um dies umzusetzen haben wir eine abstrakte Klasse "Strategy" entworfen, welches
 
 #### StrategyOne 
 **Schiffauswahl (Ziel)**
+
 Durch die empfangenen Broadcasts sind wir in der Lage in unserer Anwendung alle erfolgreich und missglückten beschossenen Ziele eines Spielers zu versenken zu zählen. Diese Information machen wir uns zunutze, indem wir immer den Spieler wählen der bereits die meisten Schiffe verloren hat. Gibt es mehrere nehmen wir den zuletzt betrachteten. Gibt es keinen einzigen solchen Spieler wählen wir einen Spieler aus bei dem die meisten missglückten beschossenen Ziele aufgetreten sind. Gibt es mehrere nehmen wir den zuletzt betrachteten. 
 
 Wenn wir der erste Spieler sind der schießen darf, erfolgt die Auswahl des Ziels zufällig.
@@ -19,10 +20,11 @@ Dabei erstellen wir uns eine Übersicht aller feindlichen Spieler und sortieren 
 Anschließend nutzen wir die Id unseres Ziels als Obergrenze und die Id seines "vermutlichen" Predecessors als Untergrenze und generieren daraus ein beliebiges Ziel auf das wir schießen wollen. Gleichzeitig wird überprüft ob, das ermittelte Ziel bereits beschossen wurde. Falls das Ziel bereits beschossen wurde, wird solange ein neues Ziel in dem genannten Intervall erzeugt, bis ein Ziel gefunden wird, auf das noch nicht geschossen wurde.
 
 **Eigene Schiffe platzieren**
+
 Beispielstrategien zur Verteilung unserer Schiffe aus dem Spiel "Schiffe versenken" können wir nicht verwenden, da unsere Schiffe jeweils nur mit einem Feld gleichzusetzen sind und die Verteilungsstrategie in dem Spiel "Schiffe versenken" darauf bassiert den Gegner durch sich überlappende Schiffe-Teile zu verunsichern. Aus diesem Grund bleibt uns nichts anderes übrig die Schiffe innerhalb der Szene nach belieben zu verteilen. Dabei stellen wir zudem sicher, dass keine Intervalle doppelt belegt werden.
 
 ## How To Start
-Zum Starten eines Tests oder Spieles muss das Script "run_local_test.sh" ausgeführt werden. Die erforderlichen Parameter sowie drei Beispiele sind im unteren Codeschnippsel aufgeführt. Der Schnippsel zeigt die Anwendung des Scripts vom Root-Verzeichnis aus gesehen. Für das korrekte Starten wird zudem eine vorhandene Verbindung zu einem CoAP-Server benötigt.
+Zum Starten eines Tests oder Spieles muss das Script "run_local_test.sh" ausgeführt werden. Die erforderlichen Parameter sowie drei Beispiele sind im unteren Codeschnippsel aufgeführt. Der Schnippsel zeigt die Anwendung des Scripts vom Root-Verzeichnis aus gesehen. Für das korrekte Starten wird zudem eine vorhandene Verbindung zu einem CoAP-Server benötigt. Zur Anzeige von Usage und Examples in der Konsole reicht es `./run_local_test.sh` ohne Parameter auszuführen.
 
 ***Usage***
 
