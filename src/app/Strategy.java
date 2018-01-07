@@ -15,32 +15,86 @@ import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
 import de.uniba.wiai.lspi.chord.service.impl.ShipInterval;
 import de.uniba.wiai.lspi.util.logging.Logger;
 
+/**
+ * An abstract class to provide an uniform interface for
+ * implementing various stategies for the game battleships.
+ * 
+ * @author Dustin Spallek and Fabian Reiber
+ *
+ */
 public abstract class Strategy {
 
 	/**
-	 * Map that contains the informatin of successful hitted enemy ships.
+	 * Map that contains the information of successful hit enemy ship.
 	 * ID: If of the enemy.
 	 * ArrayList<ID>: Drown ships with their position.
 	 */
 	private Map<ID, ArrayList<ID>> hitEnemyShips;
+	
 	/**
-	 * Map that contains the informatin of unsuccessful hitted enemy area.
+	 * Map that contains the information of unsuccessful hit enemy area.
 	 * ID: If of the enemy.
-	 * ArrayList<ID>: unsuccessful hitted area-id.
+	 * ArrayList<ID>: unsuccessful hit area-id.
 	 */
 	private Map<ID, ArrayList<ID>> noHitEnemyShips;
+	
+	/**
+	 * Map that contains information about successful and unsuccessful hit enemy ship/area.
+	 * ID: If of the enemy.
+	 * ArrayList<ID>: successful/unsuccessful hit ship/area-id.
+	 */
 	private Map<ID, ArrayList<ID>> completeHitInfoEnemyShips;
+	
+	/**
+	 * Counts the successful drowned ships of enemies.
+	 * ID: ID of the enemy.
+	 * Integer: number of drowned ships.
+	 */
 	private Map<ID, Integer> enemiesWithShipCount;
+	
+	/**
+	 * List all of intervals where we placed our own ships.
+	 */
 	private List<ShipInterval> ownShipIntervals;
+	
+	/**
+	 * Count for our own drowned ships.
+	 */
 	private int ourDrownShipsCount;
+	
+	/**
+	 * ID of our predecessor + 1 is the start of our interval.
+	 */
 	private ID startOwnInterval;
+	
+	/**
+	 * Our own nodeID is the end of our interval.
+	 */
 	private ID endOwnInterval;
+	
+	/**
+	 * The maximum nodeID of the chord ring.
+	 */
 	private ID maxNodeID;
-	private List<ShipInterval> ourPlacedShipsWithinOutInterval;
+	
+	/**
+	 * Logger of all strategies.
+	 */
 	private static final Logger logger = Logger.getLogger(Strategy.class.getName());
 	
+	/**
+	 * Number of intervals every player has to hold.
+	 */
 	private static final int INTERVALSIZE = 100;
+	
+	/**
+	 * Number of ships every player has.
+	 */
 	private static final int SHIPCOUNT = 10;
+	
+	/**
+	 * Object of ChordImpl.
+	 */
 	public ChordImpl impl;
 	
 	public Strategy(ChordImpl impl){
@@ -64,8 +118,8 @@ public abstract class Strategy {
 	 * Sobald ein Broadcast einen Gegner meldet, dessen Schiff getroffen wurde, wird diese Methode 
 	 * ausgeführt. Diese Methode nimmt die Information entgegen und speichert sie in hitEnemyShips.
 	 * 
-	 * @param attackedEnemy
-	 * @param target
+	 * @param attackedEnemy ID des beschossenen Spielers.
+	 * @param target Konkrete ID des Ziels welches erfolgreich beschossen wurde.
 	 */
 	public void addHitTarget(ID attackedEnemy, ID target){
 		ArrayList<ID> enemy = this.hitEnemyShips.get(attackedEnemy); 
@@ -80,6 +134,12 @@ public abstract class Strategy {
 		}
 	}
 	
+	/**
+	 * Sobald ein Broadcast einen Gegner meldet, dessen Schiff nicht getroffen wurde, wird diese Methode 
+	 * ausgeführt. Diese Methode nimmt die Information entgegen und speichert sie in noHitEnemyShips.
+	 * @param attackedEnemy ID des beschossenen Spielers.
+	 * @param target Konkrete ID des Ziels welches nicht erfolgreich beschossen wurde.
+	 */
 	public void addNoHitTarget(ID attackedEnemy, ID target){
 		ArrayList<ID> enemy = this.getNoHitEnemyShips().get(attackedEnemy);
 		if(enemy == null){

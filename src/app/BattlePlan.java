@@ -104,10 +104,13 @@ public class BattlePlan implements NotifyCallback{
 	@Override
 	public void retrieved(ID target) {
 		boolean hit = checkShipPlacement(target);
+		
+		this.logDebug("Got a broadcast on target: " + target + "; the hit was: " + hit);
+		this.logDebug("The amount of our drowned ships is: " + this.strategy.getOurDrownShipsCount());
+		
 		if(hit){
 			this.setSensorColor();
 		}
-		this.logDebug("Got a broadcast on target: " + target + "; the hit was: " + hit);
 		this.impl.broadcast(target, hit);
 		// if we are the player which lost all ships, we stop playing
 		if(this.strategy.getOurDrownShipsCount() == 10){
@@ -186,7 +189,7 @@ public class BattlePlan implements NotifyCallback{
 		
 		if(firstNodeOnRing || lastNodeAndMaxID){
 			this.logDebug("I am the very first player allowed to shoot!");
-			//for local test we need to wait a moment after every chord network is updated
+			//for local test we need to wait a moment after chord network is updated
 			Thread.sleep(2000);
 			this.shoot();
 		}
@@ -202,7 +205,7 @@ public class BattlePlan implements NotifyCallback{
 	}
 
 	/**
-	 * Perform a shoot on a target. The target with is choosed by
+	 * Perform a shoot on a target. The target with is choose by
 	 * the strategy. After it will be retrieved asynchronously.
 	 */
 	private void shoot(){
@@ -255,9 +258,7 @@ public class BattlePlan implements NotifyCallback{
 				}
 				break;
 			}
-		}
-		this.logDebug(this.impl.getID() + "his DrownShips amount: " + this.strategy.getOurDrownShipsCount());
-		
+		}		
 		return hit;
 	}
 	
@@ -275,8 +276,7 @@ public class BattlePlan implements NotifyCallback{
 		else{
 			this.cCon.setRed();
 		}
-		this.logDebug("set color to: " + this.cCon.getColor());
-		this.logDebug("percentage: " + per);
+		this.logDebug("Color status is: " + this.cCon.getColor() + "(" + per + ")");
 	}
 	
 	/**

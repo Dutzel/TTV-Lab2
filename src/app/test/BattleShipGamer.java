@@ -9,12 +9,42 @@ import de.uniba.wiai.lspi.chord.data.URL;
 import de.uniba.wiai.lspi.chord.service.ServiceException;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
 
+/**
+ * Represent a concrete instance of a creator or joiner node in
+ * a chord network. 
+ *
+ * @author Fabian Reiber and Dustin Spallek
+ *
+ */
 public class BattleShipGamer extends Thread {
+	/**
+	 * Input BufferedReader for console input to wait for starting the game.
+	 */
 	private BufferedReader br;
+	
+	/**
+	 * The URL this node is listening on.
+	 */
 	private URL url;
+	
+	/**
+	 * Instance of ChordImpl.
+	 */
 	private ChordImpl cImpl;
+	
+	/**
+	 * A flag if this node is a joiner node or not.
+	 */
 	private boolean joiner;
+	
+	/**
+	 * The bootstrap URL of the creator node.
+	 */
 	private URL gameMaster;
+	
+	/**
+	 * Mode ('test' or 'contest') of the running application.
+	 */
 	private String type;
 
 	public BattleShipGamer(URL url, String strategyName, String coapServer, boolean joiner,
@@ -35,83 +65,42 @@ public class BattleShipGamer extends Thread {
 			// we need to wait, until every node is updated.
 			// if we no wait, we got wrong finger- and successor tables.
 			Thread.sleep(2000);
-			this.startGameAfterEverybodyIsConnected();
+			this.cImpl.loadBattlePlanGrid();
 		} catch (ServiceException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		};
 
 	}
 	
+	/**
+	 * Initialize the game and waits for button press if the
+	 * started in 'contest' mode.
+	 * @throws ServiceException
+	 * @throws IOException
+	 */
 	public void init() throws ServiceException, IOException{
-		if(this.type.equals("test_one")){
-			this.initGameWithoutTyping();
+		if(this.joiner){		
+			try {
+				// need to wait for chord network is organized
+				Thread.sleep(1000);			
+				System.out.println("join network with my url: " + this.url + " to network: " + this.gameMaster);
+				this.cImpl.join(this.url, this.gameMaster);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}else{
+			System.out.println("create network on: " + this.url);
+			this.cImpl.create(this.url);
 		}
-		else if(this.type.equals("contest")){
-			this.initGameWithoutTyping();
+		// only for contest wait until some pressed a button
+		if(this.type.equals("contest")){
 			System.out.println("Press enter to start game if everybody is ready!");
 			br.readLine();
 		}
 	}
-	
-	
-	public void initGameWithoutTyping() throws ServiceException, IOException{
-		if(this.joiner){
-			this.joinMatch();
-		}else{
-			this.createMatch();
-		}
-	}
-	
-	private void joinMatch() throws ServiceException, MalformedURLException{
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		//cImpl.setURL(url);
-		System.out.println("join network with mine url: " + this.url + " to network: " + this.gameMaster);
-		cImpl.join(this.url, this.gameMaster);
-	}
-
-	private void createMatch() throws ServiceException{
-		System.out.println("create network on: " + this.url);
-		cImpl.create(this.url);
-	}
-	
-	private void startGameAfterEverybodyIsConnected() throws InterruptedException{
-		cImpl.loadBattlePlanGrid();
-		
-		// determine our id via the network
-		// if we are the highest id, we need to start with the battle
-		//		call chordimpl object via network object
-	}
-	
-//	public void initGameByTyping() throws ServiceException, IOException{
-//	String consolInput;
-//	while (true) {
-//		System.out.println("Enter 'j' or 'c' to join or create a match");
-//		System.out.println("");
-//		consolInput = br.readLine();
-//		System.out.println("You entered: " + consolInput);
-//		if(consolInput.equals("j")){
-//			this.joinMatch();
-//			break;
-//		}else if(consolInput.equals("c")){
-//			this.createMatch();
-//			break;
-//		}else{
-//			System.out.println("Wrong entry, please try again.");
-//			System.out.println("");
-//		}
-//	}
-//}
-
 }

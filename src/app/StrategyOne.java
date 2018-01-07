@@ -12,6 +12,15 @@ import de.uniba.wiai.lspi.chord.data.ID;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
 import de.uniba.wiai.lspi.chord.service.impl.ShipInterval;
 
+/**
+ * A concrete implementation of a strategy for the game battleships.
+ * It implements the sub strategy for placing ships on the chord ring 
+ * and a sub strategy for choosing a target of another player.
+ * 
+ * @author Fabian Reiber and Dustin Spallek
+ *
+ */
+
 public class StrategyOne extends Strategy {
 	
 	public StrategyOne(ChordImpl impl) {
@@ -24,7 +33,7 @@ public class StrategyOne extends Strategy {
 	 * 
 	 * Über die Liste usedPositions wird sichergestellt, dass keine Position doppelt vergeben wird.
 	 * 
-	 * Ein Schiff gilt als nicht getroffen, wenn der Booleanwert false liefert (Ist das Schiff getroffen? --> false)
+	 * Ein Schiff gilt als nicht getroffen, wenn der Booleanwert false liefert.
 	 * 
 	 * @return Map<ShipInterval, Boolean> shipPositions --> Positionen unserer Schiffe
 	 */
@@ -138,7 +147,12 @@ public class StrategyOne extends Strategy {
 	
 	/**
 	 * Generates a random ID. If the node is the first node in the ring,
-	 * and the last node is not the maximum nodeID, it checks the 
+	 * and the last node is not the maximum nodeID, it checks if the generated ID
+	 * is not in our own interval. Otherwise it checks if the generated ID is between
+	 * our start interval ID and the maxNodeID or between 0 and our end interval ID.
+	 * @param firstNode True if we are the first node in ring; otherwise false.
+	 * @param predecMaxNode True our predecessor is the max node in ring; otherwise false.
+	 * @return A random ID which is not in our own interval.
 	 */
 	private ID chooseRandomTarget(boolean firstNode, boolean predecMaxNode) {
 		BigInteger rnd;
@@ -160,6 +174,10 @@ public class StrategyOne extends Strategy {
 		return target;
 	}
 	
+	/**
+	 * Generated a BigInteger number which is not 0 and is not larger than 2¹⁶⁰ - 1.
+	 * @return A random BigInteger number.
+	 */
 	private BigInteger generateRandomBigInt(){
 		BigInteger rnd = new BigInteger(160, new Random());
 		if (rnd.compareTo(new BigInteger("0")) == 0){

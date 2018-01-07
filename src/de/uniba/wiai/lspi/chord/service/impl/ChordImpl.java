@@ -1198,6 +1198,9 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		}
 	}
 	
+	/**
+	 * Determine the correct strategy class and creates the BattlePlan instance. 
+	 */
 	private void createStrategy(){
 		//create BattlePlan instance for communication
 		Class<?> clazz;
@@ -1215,6 +1218,9 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		}
 	}
 	
+	/**
+	 * Load all necessary information for the game to run.
+	 */
 	public void loadBattlePlanGrid(){
 		try {
 			((BattlePlan)this.localCallback).loadGrid();
