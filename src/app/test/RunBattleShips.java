@@ -15,7 +15,7 @@ import de.uniba.wiai.lspi.chord.service.PropertiesLoader;
  * 
  * Start example via console:
  * ConsoleOne: java -jar ttvs_coapdummyled.jar
- * ConsoleTwo: run_local_test.sh test localhost 10000 4 app.StrategyOne localhost:5683
+ * ConsoleTwo: ./run_game.sh test localhost:10000 localhost 10001 4 app.StrategyOne localhost:5683
  * @author Dustin Spallek and Fabian Reiber
  *
  */
@@ -32,14 +32,14 @@ public class RunBattleShips{
 	private static String SOCKETPROT = URL.KNOWN_PROTOCOLS.get(URL.SOCKET_PROTOCOL);
 	
 	/**
-	 * The given IP where the chord node is running on.
+	 * The players IP.
 	 */
-	private static String IP;
+	private static String PLAYERIP;
 	
 	/**
-	 * The given port of the particular node.
+	 * The players port.
 	 */
-	private static int PORT;
+	private static int PLAYERPORT;
 	
 	/**
 	 * The determined URL of the chord network creator.
@@ -49,31 +49,29 @@ public class RunBattleShips{
 	/**
 	 * The determined URL of the particular node.
 	 */
-	private static URL LOCALURL;
+	private static URL PLAYERURL;
 	
 	public static void main(String[] args) throws MalformedURLException {		
 		try {
 			PropertiesLoader.loadPropertyFile();
-			
+
 			String type = args[0];
-			IP = args[1];
-			PORT = Integer.parseInt(args[2]);
+			PLAYERIP = args[2];
+			PLAYERPORT = Integer.valueOf(args[3]);
 			String strategyName = args[args.length - 2];
 			String coapServer = args[args.length - 1];
 			
 			if(type.equals("test")){
-				BOOTSTRAPURL = new URL(LOCALPROT + "://" + IP + ":" + PORT +"/");
-				int amountTestPlayers = Integer.parseInt(args[3]);
-				
+				BOOTSTRAPURL = new URL(LOCALPROT + "://" + args[1] +"/");
 				// start player nodes by given amount
-				List<BattleShipGamer> players = RunBattleShips.loadTestMocks(amountTestPlayers, strategyName, coapServer, type);
+				List<BattleShipGamer> players = RunBattleShips.loadTestMocks(
+						Integer.parseInt(args[4]), strategyName, coapServer, type);
 				for (BattleShipGamer testThread : players) {
 					testThread.start();
 				}
 			}
 			else if(type.equals("contest")){
-				BOOTSTRAPURL = new URL(SOCKETPROT + "://" +IP + ":" + PORT + "/");
-				
+				BOOTSTRAPURL = new URL(SOCKETPROT + "://" + args[1] +"/");
 				if(args[4].equals("create")){
 					BattleShipGamer tt = loadCreator(strategyName, coapServer, type);
 					tt.start();
@@ -103,12 +101,13 @@ public class RunBattleShips{
 	 * @param type The playing mode: 'test' or 'contest'
 	 * @return The generated list of nodes.
 	 */
-	public static List<BattleShipGamer> loadTestMocks(int amountPlayers, String strategyName, String coapServer, String type){
+	public static List<BattleShipGamer> loadTestMocks(
+			int amountPlayers, String strategyName, String coapServer, String type){
 		List<BattleShipGamer> players = new ArrayList<>();
 
 		players.add(loadCreator(strategyName, coapServer, type));
-		for (int i = 1; i < amountPlayers; i++) {
-			players.add(loadJoiner(strategyName, coapServer, PORT + i, type));
+		for (int i = 0; i < amountPlayers; i++) {
+			players.add(loadJoiner(strategyName, coapServer, PLAYERPORT + i, type));
 		}
 		return players;
 	}
@@ -143,13 +142,13 @@ public class RunBattleShips{
 		BattleShipGamer tt = null;
 		try {
 			if(type.equals("test")){
-				LOCALURL = new URL(LOCALPROT + "://" + IP + ":" + port + "/");
+				PLAYERURL = new URL(LOCALPROT + "://" + PLAYERIP + ":" + port + "/");
 			}
 			else if(type.equals("contest")){
-				LOCALURL = new URL(SOCKETPROT + "://" + IP + ":" + port + "/");
+				PLAYERURL = new URL(SOCKETPROT + "://" + PLAYERIP + ":" + port + "/");
 			}
-			tt = new BattleShipGamer(LOCALURL, strategyName, coapServer, true, BOOTSTRAPURL, type);
-			System.out.println("PlayerUrl " + LOCALURL + " added.");
+			tt = new BattleShipGamer(PLAYERURL, strategyName, coapServer, true, BOOTSTRAPURL, type);
+			System.out.println("PlayerUrl " + PLAYERURL + " added.");
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
