@@ -35,9 +35,9 @@ Die Datei zum Starten eines CoAP-Servers ist im Ordner 'libs' mit den Namen 'ttv
 
 ***Examples***
 
-Start CoAP-Server:
+(0) Start CoAP-Server:
 
-(0) java -jar ttvs_coapdummyled.jar
+	  java -jar ttvs_coapdummyled.jar
 
 Tests from root of this project:
 
