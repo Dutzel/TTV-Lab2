@@ -25,6 +25,7 @@ Beispielstrategien zur Verteilung unserer Schiffe aus dem Spiel "Schiffe versenk
 
 ## How To Start
 Zum Starten eines Tests oder Spieles muss das Script "run_game.sh" ausgeführt werden. Die erforderlichen Parameter sowie drei Beispiele sind im unteren Codeschnippsel aufgeführt. Der Schnippsel zeigt die Anwendung des Scripts vom Root-Verzeichnis aus gesehen. Für das korrekte Starten wird zudem eine vorhandene Verbindung zu einem CoAP-Server benötigt. Zur Anzeige von Usage und Examples in der Konsole reicht es `./run_game.sh` ohne Parameter auszuführen.
+Die Datei zum Starten eines CoAP-Servers ist im Ordner 'libs' mit den Namen 'ttvs_coapdummyled.jar' zu finden.
 
 ***Usage***
 
@@ -33,6 +34,10 @@ Zum Starten eines Tests oder Spieles muss das Script "run_game.sh" ausgeführt w
 `./run_game.sh <contest> <bootstrap-ip-address:bootstrap-port> <players-ip-address> <players-port> <create | join> <name-of-strategy> <coap-url:coap-port>`
 
 ***Examples***
+
+Start CoAP-Server:
+
+(0) java -jar ttvs_coapdummyled.jar
 
 Tests from root of this project:
 
