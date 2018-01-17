@@ -530,10 +530,12 @@ public final class NodeImpl extends Node {
 					if (this.logger.isEnabledFor(DEBUG)) {
 						this.logger.debug("Inform my application about the broadcast from another node: " + info.toString());
 					}
+					this.sendBroadcast(sortedFingerTable, 0, info);
 					this.notifyCallback.broadcast(info.getSource(), info.getTarget(), info.getHit());
 				}
+			}else{
+				this.sendBroadcast(sortedFingerTable, 0, info);
 			}
-			this.sendBroadcast(sortedFingerTable, 0, info);
 		}else{
 			if (this.logger.isEnabledFor(DEBUG)) {
 				this.logger.debug("Ignored transaction " + info.getTransaction() + ", because it was already forwarded.");
